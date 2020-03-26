@@ -70,6 +70,7 @@ class Room:
         self.write("queue")
         self.write("room")
         self.write("count")
+        return id
 
     def addQueue(self, mem, id):
         """Add a member to the queue"""

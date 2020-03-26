@@ -28,7 +28,7 @@ class Price:
     def sort(self, dic):
         """Return a sorted dict"""
 
-        sorted_d = dict(sorted(dic.items(), key=lambda x: x[1]))
+        sorted_d = dict(sorted(dic.items(), key=lambda x: x[1], reverse=True))
         return sorted_d
 
     def addPrice(self, group, user, price):

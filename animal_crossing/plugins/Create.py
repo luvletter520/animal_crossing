@@ -17,8 +17,8 @@ async def create(session: CommandSession):
     except:
         session.pause('格式错误，重新输入')
     room = Room()
-    room.open(formatDetails, session.event['group_id'], session.event['user_id'])
-    await session.send('发布成功')
+    id = room.open(formatDetails, session.event['group_id'], session.event['user_id'])
+    await session.send(f'发布成功\n房间ID为：{id}')
 
 
 @create.args_parser
