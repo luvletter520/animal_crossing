@@ -1,5 +1,4 @@
 import json
-import operator
 
 class Price:
 
@@ -26,10 +25,10 @@ class Price:
         fo.write(j)
         fo.close()
 
-    def sort(self, dict):
+    def sort(self, dic):
         """Return a sorted dict"""
 
-        sorted_d = dict( sorted(dict.items(), key=operator.itemgetter(1)))
+        sorted_d = dict(sorted(dic.items(), key=lambda x: x[1]))
         return sorted_d
 
     def addPrice(self, group, user, price):
