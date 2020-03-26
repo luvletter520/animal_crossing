@@ -5,7 +5,7 @@
 
 ## 简介
 
-大头菜是一个基于酷Q和Nonebot SDK的QQ机器人，为QQ群内的大头菜交易提供便利功能。
+datoucai是一个基于酷Q和Nonebot SDK的QQ机器人，为QQ群内的大头菜交易提供便利功能。
 
 ## 功能列表
 
