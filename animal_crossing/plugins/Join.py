@@ -1,5 +1,6 @@
 from nonebot import on_command, CommandSession
 from .Object import Room
+import config
 
 
 @on_command('join', aliases=('进房', '排队', '参加'), only_to_me=False)
@@ -18,7 +19,7 @@ async def join(session: CommandSession):
         await session.send('您已在队列中')
     else:
         # Room capacity
-        if room.getUserNumber(details) < 1:
+        if room.getUserNumber(details) < config.CAPACITY:
             print(room.getUserNumber(details))
             room.addQueue(session.event['user_id'], details)
             room.addMember(session.event['user_id'], details)

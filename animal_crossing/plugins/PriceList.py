@@ -56,6 +56,30 @@ class Price:
         self.write("price")
         self.write("history")
 
+    def delAll(self):
+        """Del all prices"""
+
+        self.read("price")
+        self.read("history")
+        for k, v in self.price.items():
+            for user, list in v.items():
+                if k not in self.history.keys():
+                    self.history[k] = {}
+                self.history[k].setdefault(user, []).append(self.price[k][user])
+            self.price[k] = {}
+        self.write("price")
+        self.write("history")
+
+    def getGroupList(self):
+        """Get tencent groups list"""
+
+        self.read("price")
+        groupList = []
+        for k,v in self.price.items():
+            if v != {}:
+                groupList.append(k)
+        return groupList
+
     def getPriceList(self):
         self.read("price")
         return self.price

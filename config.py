@@ -5,3 +5,4 @@ SUPERUSERS = {260448374}
 COMMAND_START = {'/', '!', '／', '！', '#'}
 SESSION_EXPIRE_TIMEOUT = timedelta(seconds=40)
 NICKNAME = {'bot', 'nookbot', 'nbot'}
+CAPACITY = 2
