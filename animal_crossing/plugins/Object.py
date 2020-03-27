@@ -175,6 +175,17 @@ class Room:
                 return id
         return None
 
+    def inQueue(self, mem):
+        """Return the mem's queue id"""
+
+        self.read("queue")
+        mem = str(mem)
+        for id, memList in self.queue.items():
+            if mem in memList.keys():
+                return id
+        return None
+
+
     def getRoom(self):
         self.read("room")
         return

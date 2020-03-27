@@ -6,10 +6,12 @@ import nonebot
 async def delete(session: CommandSession):
     price = Price()
     priceList = price.getPriceList()
-    if str(session.event["user_id"]) not in priceList.keys():
+    user = str(session.event["user_id"])
+    group = str(session.event["group_id"])
+    if user not in priceList[group].keys():
         await session.send('没有记录')
     else:
-        priceList.delPrice(session.event["group_id"], session.event["user_id"])
+        price.delPrice(group, user)
         await session.send('删除成功')
 
 @nonebot.scheduler.scheduled_job('cron', hour='0,12', timezone='Asia/Shanghai')

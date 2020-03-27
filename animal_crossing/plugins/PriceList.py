@@ -48,13 +48,8 @@ class Price:
 
         user = str(user)
         self.read("price")
-        self.read("history")
-        if group not in self.history.keys():
-            self.history[group] = {}
-        self.history[group].setdefault(user, []).append(self.price[group][user])
         del self.price[group][user]
         self.write("price")
-        self.write("history")
 
     def delAll(self):
         """Del all prices"""

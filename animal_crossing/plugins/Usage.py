@@ -3,24 +3,16 @@ from nonebot import on_command, CommandSession
 COMMANDLIST = """
 【目前支持中英文"/" "!" "#"作为命令识别符】
 命令如下：
-#查看房间
-/show
-#查看价格列表
-/price
-#开房
-/open
-#添加价格
-/add
-#删除价格
-/del
-#关闭 房间名
-/close
-#排队 房间名
-/join
-#等待人数
-/len
-#退出
-/exit
+/show  #查看房间
+/open  #开房
+/join  #排队 + 房间ID
+/close  #关闭 + 房间ID
+/len  #查看队列等待人数
+/exit  #退出房间
+
+/price  #查看价格列表
+/add  #添加价格
+/del  #删除价格
 """
 
 

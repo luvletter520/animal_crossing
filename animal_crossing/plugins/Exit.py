@@ -2,7 +2,7 @@ from nonebot import on_command, CommandSession
 from .Object import Room
 
 
-@on_command('exit', aliases=('进房', '排队', '参加'), only_to_me=False)
+@on_command('exit', aliases=('退出', '退出房间'), only_to_me=False)
 async def exit(session: CommandSession):
     user = session.event['user_id']
     room = Room()
