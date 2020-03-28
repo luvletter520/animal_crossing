@@ -17,4 +17,4 @@ async def exit(session: CommandSession):
             if pos == num:
                 room.addMember(mem, id)
                 bot = session.bot
-                await bot.send_group_msg(group_id=session.event["group_id"], message=f"请[CQ:at,qq={mem}]进入房间\n房间密码为“{room.room[id]['passwd']}\n请在工作完成后使用 /exit 命令退出房间")
+                await bot.send_group_msg(group_id=session.event["group_id"], message=f"请[CQ:at,qq={mem}]进入房间\n房间密码为：{room.room[id]['passwd']}\n请在工作完成后使用 /exit 命令退出房间")
