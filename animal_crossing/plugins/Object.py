@@ -120,6 +120,8 @@ class Room:
         cur = self.getRoomQueue(id)
         if self.queue[str(id)] == {}:
             return 0
+        elif self.member[id]['member'] == []:
+            return 0
         return list(self.queue[str(id)].values())[-1] - cur
 
     def exitQueue(self, mem):
