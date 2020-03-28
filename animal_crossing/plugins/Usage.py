@@ -15,7 +15,6 @@ COMMANDLIST = """
 /del  #删除价格
 """
 
-
 # 使用帮助
 @on_command('help', aliases=('帮助', '命令', '查看帮助'), only_to_me=False)
 async def usage(session: CommandSession):
