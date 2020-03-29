@@ -103,7 +103,7 @@ class Room:
         self.read("history")
         self.read("queue")
         self.history[str(roomID)] = self.room[str(roomID)]
-        self.history[str(roomID)]["number"] = len(self.queue[str(roomID)].keys())
+        self.history[str(roomID)]["number"] = len(self.queue[str(roomID)])
         del self.room[str(roomID)]
         del self.member[str(roomID)]
         del self.queue[str(roomID)]
