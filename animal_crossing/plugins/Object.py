@@ -1,6 +1,5 @@
 import json
 
-
 class Room:
     def __init__(self):
         self.room = {}
@@ -46,9 +45,6 @@ class Room:
         fo.write(j)
         fo.close()
 
-    def getUserId(self, name):
-        self.read("animal_crossing/data/cur.json", "lottery")
-        return self.lottery[name][5]
 
     def open(self, msgList, groupId, userId):
         self.read("room")
@@ -59,8 +55,8 @@ class Room:
         id = self.count["count"]
         self.room[str(id)] = {}
         self.member[str(id)] = {}
-        self.member[str(id)]["member"] = []
-        self.queue[str(id)] = {}
+        self.member[str(id)] = []
+        self.queue[str(id)] = []
         self.room[str(id)]["id"] = id
         self.room[str(id)]["passwd"] = msgList[0]
         self.room[str(id)]["price"] = msgList[1]
@@ -76,64 +72,28 @@ class Room:
         """Add a member to the queue"""
 
         self.read("queue")
-        if self.queue[str(id)] == {}:
-            self.queue[str(id)][str(mem)] = 1
-        else:
-            self.queue[str(id)][str(mem)] = list(self.queue[str(id)].values())[-1] + 1
-            print(self.queue[str(id)][str(mem)])
+        self.queue[str(id)].append(mem)
         self.write("queue")
-
-    def getRoomQueue(self, id):
-        """Return the queue number of the last member in target room"""
-
-        self.read("member")
-        self.read("queue")
-        if self.member[str(id)]["member"] == []:
-            return 0
-        return self.queue[str(id)][str(self.member[str(id)]["member"][-1])]
-
-    def getQueueNum(self, mem):
-        """Return the queue number of mem"""
-
-        self.read("queue")
-        for queue in self.queue.values():
-            for queueMem in queue.keys():
-                if str(mem) == queueMem:
-                    return queue[queueMem]
-        return None
 
     def getWaitLen(self, mem):
         """Return the queue length before mem"""
 
         for id, queue in self.queue.items():
-            for queueMem in queue.keys():
-                if str(mem) == queueMem:
-                    idIN = id
-                    num = queue[queueMem]
-                    cur = self.getRoomQueue(idIN)
-                    return num - cur - 1
+            count = 0
+            for queueMem in queue:
+                if mem == queueMem:
+                    return count
+                count += 1
         return None
 
     def getQueueLen(self, id):
         """Return the queue lenth"""
 
-        cur = self.getRoomQueue(id)
-        if self.queue[str(id)] == {}:
-            return 0
-        elif self.member[id]['member'] == []:
-            return 0
-        return list(self.queue[str(id)].values())[-1] - cur
-
-    def exitQueue(self, mem):
-        """Exit queue (useless)"""
-
-        self.read("queue")
-        for queue in self.queue.values():
-            for queueMem in queue.keys():
-                if mem == queueMem:
-                    del queue[queueMem]
-                    return True
-        return False
+        id = str(id)
+        count = 0
+        for i in self.queue[id]:
+            count += 1
+        return count
 
     def close(self, roomID):
         """Close one room"""
@@ -157,23 +117,29 @@ class Room:
         """Add a member to the target room"""
 
         self.read("member")
-        self.member[str(id)]["member"].append(mem)
+        self.member[str(id)].append(mem)
         self.write("member")
 
     def exitMem(self, mem, id):
         """Exit room"""
 
         self.read("member")
-        self.member[str(id)]["member"].remove(mem)
+        self.member[str(id)].remove(mem)
         self.write("member")
 
+    def exitQueue(self, mem, id):
+        """Exit queue"""
+
+        self.read("queue")
+        self.queue[str(id)].remove(mem)
+        self.write("queue")
 
     def inMember(self, mem):
         """Return the mem's room id"""
 
         self.read("member")
         for id, memList in self.member.items():
-            if mem in memList["member"]:
+            if mem in memList:
                 return id
         return None
 
@@ -181,9 +147,8 @@ class Room:
         """Return the mem's queue id"""
 
         self.read("queue")
-        mem = str(mem)
         for id, memList in self.queue.items():
-            if mem in memList.keys():
+            if mem in memList:
                 return id
         return None
 
@@ -204,9 +169,9 @@ class Room:
         """Return the number of people in the room"""
 
         self.read("member")
-        if self.member[str(id)]["member"] == []:
+        if self.member[str(id)] == []:
             return 0
-        return len(self.member[str(id)]["member"])
+        return len(self.member[str(id)])
 
     def getGroupList(self):
         """Get tencent groups list"""
@@ -233,6 +198,7 @@ class Room:
                 id = room["id"]
                 output += f"""========================
 房间ID：{room["id"]}
+房间价格：{room["price"]}
 房间人数：{self.getUserNumber(id)}
 排队人数：{self.getQueueLen(id)}
 """

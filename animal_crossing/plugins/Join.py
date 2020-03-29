@@ -13,21 +13,20 @@ async def join(session: CommandSession):
     room.getQueue()
     if details not in room.room.keys():
         await session.send('房间不存在')
-    elif session.event['user_id'] in room.member[details]["member"]:
+    elif session.event['user_id'] in room.member[details]:
         await session.send('您已在房间中')
-    elif str(session.event['user_id']) in room.queue[details].keys():
+    elif session.event['user_id'] in room.queue[details]:
         await session.send('您已在队列中')
     else:
         # Room capacity
         if room.getUserNumber(details) < config.CAPACITY:
             print(room.getUserNumber(details))
-            room.addQueue(session.event['user_id'], details)
             room.addMember(session.event['user_id'], details)
             await session.send(f'成功进入房间\n房间密码为：{room.room[details]["passwd"]}\n请在工作完成后使用 /exit 命令退出房间')
         else:
             room.addQueue(session.event['user_id'], details)
-            await session.send(f"成功进入队列\n队列序号为：{room.queue[details][str(session.event['user_id'])]}\n"
-                               f"前方队列长度为：{room.getWaitLen(str(session.event['user_id']))}")
+            await session.send(f"成功进入队列\n"
+                               f"前方队列长度为：{room.getWaitLen(session.event['user_id'])}")
 
 
 
