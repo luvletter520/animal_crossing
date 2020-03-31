@@ -1,4 +1,6 @@
 import json
+import time
+
 
 class Room:
     def __init__(self):
@@ -45,8 +47,7 @@ class Room:
         fo.write(j)
         fo.close()
 
-
-    def open(self, msgList, groupId, userId):
+    def open(self, msgList, groupId, userId, nickname):
         self.read("room")
         self.read("count")
         self.read("member")
@@ -55,13 +56,15 @@ class Room:
         id = self.count["count"]
         self.room[str(id)] = {}
         self.member[str(id)] = {}
-        self.member[str(id)] = []
-        self.queue[str(id)] = []
+        self.member[str(id)] = {}
+        self.queue[str(id)] = {}
         self.room[str(id)]["id"] = id
         self.room[str(id)]["passwd"] = msgList[0]
         self.room[str(id)]["price"] = msgList[1]
         self.room[str(id)]["group"] = groupId
         self.room[str(id)]["user"] = userId
+        self.room[str(id)]["nickname"] = nickname
+        self.room[str(id)]["time"] = time.time()
         self.write("member")
         self.write("queue")
         self.write("room")
@@ -72,7 +75,7 @@ class Room:
         """Add a member to the queue"""
 
         self.read("queue")
-        self.queue[str(id)].append(mem)
+        self.queue[str(id)][str(mem)] = {'time': time.time()}
         self.write("queue")
 
     def getWaitLen(self, mem):
@@ -80,7 +83,7 @@ class Room:
 
         for id, queue in self.queue.items():
             count = 0
-            for queueMem in queue:
+            for queueMem in queue.keys():
                 if mem == queueMem:
                     return count
                 count += 1
@@ -112,26 +115,25 @@ class Room:
         self.write("member")
         self.write("history")
 
-
     def addMember(self, mem, id):
         """Add a member to the target room"""
 
         self.read("member")
-        self.member[str(id)].append(mem)
+        self.member[str(id)][str(mem)] = {'time': time.time()}
         self.write("member")
 
     def exitMem(self, mem, id):
         """Exit room"""
 
         self.read("member")
-        self.member[str(id)].remove(mem)
+        del self.member[str(id)][str(mem)]
         self.write("member")
 
     def exitQueue(self, mem, id):
         """Exit queue"""
 
         self.read("queue")
-        self.queue[str(id)].remove(mem)
+        del self.queue[str(id)][str(mem)]
         self.write("queue")
 
     def inMember(self, mem):
@@ -139,7 +141,7 @@ class Room:
 
         self.read("member")
         for id, memList in self.member.items():
-            if mem in memList:
+            if str(mem) in memList.keys():
                 return id
         return None
 
@@ -148,10 +150,9 @@ class Room:
 
         self.read("queue")
         for id, memList in self.queue.items():
-            if mem in memList:
+            if str(mem) in memList.keys():
                 return id
         return None
-
 
     def getRoom(self):
         self.read("room")
@@ -192,16 +193,16 @@ class Room:
             if singleRoom["group"] == groupId:
                 groupRoom[singleRoom["id"]] = singleRoom
         if groupRoom == {}:
-            output += '当前无房间开放'
+            output += '当前暂无岛开门'
         else:
             for room in groupRoom.values():
                 id = room["id"]
                 output += f"""========================
-房间ID：{room["id"]}
-房间价格：{room["price"]}
-房间人数：{self.getUserNumber(id)}
+岛ID：{room["id"]}
+岛主QQ号：{room['user']}
+岛主QQ昵称：{room['nickname']}
+白菜头价格：{room["price"]}
+岛上人数：{self.getUserNumber(id)}
 排队人数：{self.getQueueLen(id)}
 """
         return output
-
-

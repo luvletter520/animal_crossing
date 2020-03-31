@@ -5,17 +5,17 @@ import config
 
 @on_command('close', aliases=('关闭'), only_to_me=False)
 async def close(session: CommandSession):
-    details = session.get('details', prompt='请输入你想要关闭的房间ID')
+    details = session.get('details', prompt='请输入你想要关闭的岛ID')
     details = str(details)
     room = Room()
     room.getRoom()
     if details not in room.room.keys():
-        await session.send('房间不存在')
+        await session.send('该岛不存在')
     elif session.event['user_id'] not in [room.room[details]["user"], list(config.SUPERUSERS)[0]]:
         await session.send('你没有关闭权限')
     else:
         room.close(details)
-        await session.send('已成功关闭房间')
+        await session.send('已成功关闭岛门')
 
 
 @close.args_parser
