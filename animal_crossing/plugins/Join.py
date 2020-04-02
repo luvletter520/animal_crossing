@@ -8,24 +8,23 @@ async def join(session: CommandSession):
     details = session.get('details', prompt='请输入你想要进入的岛ID')
     details = str(details)
     room = Room()
-    room.getRoom()
-    room.getMember()
-    room.getQueue()
+    user_id = str(session.event['user_id'])
+    queue_id = room.inQueue(user_id)
     if details not in room.room.keys():
         await session.send('该岛不存在')
-    elif session.event['user_id'] in room.member[details].keys():
-        await session.send('您已在岛中, 岛密码为：'+room.room[details]["passwd"])
-    elif session.event['user_id'] in room.queue[details].keys():
-        await session.send('您已在队列中')
+    elif user_id in room.member[details].keys():
+        await session.send('你已在岛中，岛密码为：'+room.room[details]["passwd"])
+    elif queue_id:
+        await session.send('你已在队列中')
     else:
         # Room capacity
         if room.getUserNumber(details) < config.CAPACITY:
-            room.addMember(session.event['user_id'], details)
-            await session.send(f'成功进入岛\n岛密码为：{room.room[details]["passwd"]}\n请在工作完成后使用 /exit 命令退出该岛')
+            room.addMember(user_id, details)
+            await session.send(f'成功进入岛\n岛密码为：{room.room[details]["passwd"]}\n请在工作完成后使用 /退出 命令退出该岛')
         else:
-            room.addQueue(session.event['user_id'], details)
+            room.addQueue(user_id, details)
             await session.send(f"成功进入队列\n"
-                               f"前方队列长度为：{room.getWaitLen(session.event['user_id'])}")
+                               f"前方队列长度为：{room.getWaitLen(user_id)}")
 
 
 @join.args_parser

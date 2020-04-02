@@ -3,12 +3,11 @@ from .Object import Room
 import config
 
 
-@on_command('close', aliases=('关闭'), only_to_me=False)
+@on_command('close', aliases=('关闭',), only_to_me=False)
 async def close(session: CommandSession):
     details = session.get('details', prompt='请输入你想要关闭的岛ID')
     details = str(details)
     room = Room()
-    room.getRoom()
     if details not in room.room.keys():
         await session.send('该岛不存在')
     elif session.event['user_id'] not in [room.room[details]["user"], list(config.SUPERUSERS)[0]]:

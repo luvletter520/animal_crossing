@@ -6,15 +6,14 @@ from .Object import Room
 async def len(session: CommandSession):
     user = session.event['user_id']
     room = Room()
-    room.getQueue()
     roomID = room.inMember(user)
     queueID = room.inQueue(user)
     if roomID:
-        await session.send(f"\n您已在岛【{roomID}】中", at_sender=True)
+        await session.send(f"\n你已在岛【{roomID}】中", at_sender=True)
     elif queueID:
         output = f"\n你正在岛【{queueID}】的队列中\n前方排队人数为：{room.getWaitLen(session.event['user_id'])}" if room.getWaitLen(
             session.event['user_id']) else "当前不在队列中"
         await session.send(output, at_sender=True)
     else:
-        output = "您不在任何队列中"
+        output = "你不在任何队列中"
         await session.send(output, at_sender=True)

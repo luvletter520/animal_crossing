@@ -1,13 +1,39 @@
 import json
 import common
 import time
+import threading
 
 
+def singleton(cls):
+    _instance = {}
+
+    def inner():
+        if cls not in _instance:
+            _instance[cls] = cls()
+        return _instance[cls]
+
+    return inner
+
+
+@singleton
 class Price:
 
     def __init__(self):
         self.price = {}
         self.history = {}
+        self.read("price")
+        self.read("history")
+
+    @classmethod
+    def instance(cls, *args, **kwargs):
+        if not hasattr(Price, "_instance"):
+            Price._instance = Price(*args, **kwargs)
+        return Price._instance
+
+    def claerAll(self):
+        self.price = {}
+        self.history = {}
+        self.save()
 
     def read(self, var):
         if var == "price":
@@ -28,6 +54,10 @@ class Price:
         fo.write(j)
         fo.close()
 
+    def save(self):
+        self.write('price')
+        self.write('history')
+
     def sort(self, dic, reverse=True):
         """Return a sorted dict"""
 
@@ -40,39 +70,30 @@ class Price:
         user = str(user)
         group = str(group)
         nickname = str(nickname)
-        self.read("price")
         if group not in self.price.keys():
             self.price[group] = {}
         self.price[group][user] = {'price': price, 'nickname': nickname, 'time': time.time()}
         self.price[group] = self.sort(self.price[group], common.is_sunday() is False)
-        self.write("price")
 
     def delPrice(self, group, user):
         """Del the price of user from the list"""
 
         user = str(user)
-        self.read("price")
         del self.price[group][user]
-        self.write("price")
 
     def delAll(self):
         """Del all prices"""
 
-        self.read("price")
-        self.read("history")
         for k, v in self.price.items():
             for user, list in v.items():
                 if k not in self.history.keys():
                     self.history[k] = {}
                 self.history[k].setdefault(user, []).append(self.price[k][user])
             self.price[k] = {}
-        self.write("price")
-        self.write("history")
 
     def getGroupList(self):
         """Get tencent groups list"""
 
-        self.read("price")
         groupList = []
         for k, v in self.price.items():
             if v != {}:
@@ -80,14 +101,11 @@ class Price:
         return groupList
 
     def getPriceList(self):
-        self.read("price")
         return self.price
 
     def toString(self, group):
 
         group = str(group)
-        self.read("price")
-        self.read("history")
         output = ""
         groupList = {}
         for key, value in self.price.items():

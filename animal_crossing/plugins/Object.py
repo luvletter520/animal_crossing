@@ -1,7 +1,20 @@
 import json
 import time
+import threading
 
 
+def singleton(cls):
+    _instance = {}
+
+    def inner():
+        if cls not in _instance:
+            _instance[cls] = cls()
+        return _instance[cls]
+
+    return inner
+
+
+@singleton
 class Room:
     def __init__(self):
         self.room = {}
@@ -9,6 +22,19 @@ class Room:
         self.queue = {}
         self.history = {}
         self.count = {}
+        self.read("room")
+        self.read("count")
+        self.read("member")
+        self.read("queue")
+        self.read("history")
+
+    def claerAll(self):
+        self.room = {}
+        self.member = {}
+        self.queue = {}
+        self.history = {}
+        self.count = {"count": 0}
+        self.save()
 
     def read(self, var):
         if var == "room":
@@ -47,11 +73,13 @@ class Room:
         fo.write(j)
         fo.close()
 
+    def save(self):
+        self.write("member")
+        self.write("queue")
+        self.write("room")
+        self.write("count")
+
     def open(self, msgList, groupId, userId, nickname):
-        self.read("room")
-        self.read("count")
-        self.read("member")
-        self.read("queue")
         self.count["count"] = self.count["count"] + 1
         id = self.count["count"]
         self.room[str(id)] = {}
@@ -65,24 +93,18 @@ class Room:
         self.room[str(id)]["user"] = userId
         self.room[str(id)]["nickname"] = nickname
         self.room[str(id)]["time"] = time.time()
-        self.write("member")
-        self.write("queue")
-        self.write("room")
-        self.write("count")
         return id
 
     def addQueue(self, mem, id):
         """Add a member to the queue"""
-
-        self.read("queue")
         self.queue[str(id)][str(mem)] = {'time': time.time()}
-        self.write("queue")
 
     def getWaitLen(self, mem):
+        mem = str(mem)
         """Return the queue length before mem"""
-
         for id, queue in self.queue.items():
             count = 0
+            print(queue.keys())
             for queueMem in queue.keys():
                 if mem == queueMem:
                     return count
@@ -101,45 +123,31 @@ class Room:
     def close(self, roomID):
         """Close one room"""
 
-        self.read("room")
-        self.read("member")
-        self.read("history")
-        self.read("queue")
         self.history[str(roomID)] = self.room[str(roomID)]
         self.history[str(roomID)]["number"] = len(self.queue[str(roomID)])
         del self.room[str(roomID)]
         del self.member[str(roomID)]
         del self.queue[str(roomID)]
-        self.write("queue")
-        self.write("room")
-        self.write("member")
-        self.write("history")
 
-    def addMember(self, mem, id):
+    def addMember(self, mem, id, ready=True):
         """Add a member to the target room"""
 
-        self.read("member")
-        self.member[str(id)][str(mem)] = {'time': time.time()}
-        self.write("member")
+        self.member[str(id)][str(mem)] = {'time': time.time(), 'ready': ready}
 
     def exitMem(self, mem, id):
         """Exit room"""
-
-        self.read("member")
-        del self.member[str(id)][str(mem)]
-        self.write("member")
+        if str(id) in self.member:
+            if str(mem) in self.member[str(id)]:
+                del self.member[str(id)][str(mem)]
 
     def exitQueue(self, mem, id):
         """Exit queue"""
 
-        self.read("queue")
         del self.queue[str(id)][str(mem)]
-        self.write("queue")
 
     def inMember(self, mem):
         """Return the mem's room id"""
 
-        self.read("member")
         for id, memList in self.member.items():
             if str(mem) in memList.keys():
                 return id
@@ -148,28 +156,13 @@ class Room:
     def inQueue(self, mem):
         """Return the mem's queue id"""
 
-        self.read("queue")
         for id, memList in self.queue.items():
             if str(mem) in memList.keys():
                 return id
         return None
 
-    def getRoom(self):
-        self.read("room")
-        return
-
-    def getQueue(self):
-        self.read("queue")
-        return
-
-    def getMember(self):
-        self.read("member")
-        return
-
     def getUserNumber(self, id):
         """Return the number of people in the room"""
-
-        self.read("member")
         if self.member[str(id)] == []:
             return 0
         return len(self.member[str(id)])
@@ -177,16 +170,12 @@ class Room:
     def getGroupList(self):
         """Get tencent groups list"""
 
-        self.read("room")
         groupList = []
         for value in self.room.values():
             groupList.append(value["group"])
         return groupList
 
     def toString(self, groupId):
-        self.read("room")
-        self.read("member")
-        self.read("queue")
         output = ''
         groupRoom = {}
         for singleRoom in self.room.values():

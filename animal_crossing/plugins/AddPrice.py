@@ -4,9 +4,9 @@ import config
 import common
 
 
-@on_command('add', aliases=('添加价格'), only_to_me=True)
+@on_command('add', aliases=('添加价格',), only_to_me=True)
 async def add(session: CommandSession):
-    details = session.get('details', prompt='请输入您的大头菜价格')
+    details = session.get('details', prompt='请输入你的大头菜价格')
     try:
         details = int(details)
     except:
