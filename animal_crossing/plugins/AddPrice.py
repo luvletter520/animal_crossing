@@ -4,7 +4,7 @@ import config
 import common
 
 
-@on_command('add', aliases=('添加价格',), only_to_me=True)
+@on_command('add', aliases=('添加价格',), only_to_me=False)
 async def add(session: CommandSession):
     details = session.get('details', prompt='请输入你的大头菜价格')
     try:

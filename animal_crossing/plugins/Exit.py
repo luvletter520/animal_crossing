@@ -3,7 +3,7 @@ from .Object import Room
 import config
 
 
-@on_command('exit', aliases=('退出', '退出岛'), only_to_me=False)
+@on_command('exit', aliases=('退出', '退出岛'), only_to_me=True)
 async def exit(session: CommandSession):
     user = str(session.event['user_id'])
     room = Room()

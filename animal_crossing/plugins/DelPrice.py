@@ -4,7 +4,7 @@ import nonebot
 import config
 
 
-@on_command('del', aliases=('删除价格', 'delete'), only_to_me=True)
+@on_command('del', aliases=('删除价格', 'delete'), only_to_me=False)
 async def delete(session: CommandSession):
     price = Price()
     priceList = price.getPriceList()

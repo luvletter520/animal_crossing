@@ -2,7 +2,7 @@ from nonebot import on_command, CommandSession
 from .Object import Room
 
 
-@on_command('len', aliases=('length', '排队长度', '等待人数', '查看队列等待人数'), only_to_me=False)
+@on_command('len', aliases=('length', '排队长度', '等待人数', '查看队列等待人数'), only_to_me=True)
 async def len(session: CommandSession):
     user = session.event['user_id']
     room = Room()

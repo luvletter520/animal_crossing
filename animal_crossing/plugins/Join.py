@@ -3,7 +3,7 @@ from .Object import Room
 import config
 
 
-@on_command('join', aliases=('进房', '排队', '参加'), only_to_me=False)
+@on_command('join', aliases=('进房', '排队', '参加'), only_to_me=True)
 async def join(session: CommandSession):
     details = session.get('details', prompt='请输入你想要进入的岛ID')
     details = str(details)
