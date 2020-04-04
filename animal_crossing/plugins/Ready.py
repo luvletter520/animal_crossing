@@ -12,14 +12,13 @@ async def ready(session: CommandSession):
     if id:
         member = room.member[id]
         now = time.time()
-        print((now - member[user]['time']))
         if (now - member[user]['time']) > config.QUEUE_TIME_OUT * 60:
             await session.send('准备失败，你已超过准备时间，请重新输入 /排队 命令排队拿号')
         else:
-            room.member[id]['ready'] = True
+            room.member[id][user]['ready'] = True
             await session.send(f"请进入岛\n岛密码为："
                                f"{room.room[str(id)]['passwd']}"
-                               f"\n请在工作完成后使用 /退出 命令退出岛")
+                               f"\n请在出岛后使用 /退出 命令退出岛")
     else:
         await session.send('准备失败，你可能未在队列中或超过准备时间，请排队拿号')
     pass
@@ -33,17 +32,15 @@ async def _():
     for id, memList in room.member.items():
         for key, item in memList.items():
             if item['ready'] is False and (now - item['time']) > config.QUEUE_TIME_OUT * 60:
-                print((now - item['time']))
                 room.exitMem(key, id)
                 await bot.send_msg(message_type="private",
                                    user_id=int(key),
                                    message=f"你未准备, 你已超过准备时间, 请重新输入 /排队 命令排队拿号")
-                queue_ids = list(room.queue.keys())
+                queue_ids = list(room.queue[id].keys())
                 if len(queue_ids) > 0:
                     user = queue_ids[0]
-                    room.addMember(user, id, False)
-                    ididid = room.inQueue(user)
-                    room.exitQueue(user, ididid)
+                    room.addMember(user, id, room.queue[id][user]['nickname'], False)
+                    room.exitQueue(user, id)
                     await bot.send_msg(message_type="private",
                                        user_id=int(user),
                                        message=f"岛【{id}】队列已经排到你，"

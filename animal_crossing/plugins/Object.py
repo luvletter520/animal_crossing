@@ -1,6 +1,6 @@
 import json
 import time
-import threading
+import config
 
 
 def singleton(cls):
@@ -79,7 +79,7 @@ class Room:
         self.write("room")
         self.write("count")
 
-    def open(self, msgList, groupId, userId, nickname):
+    def open(self, msgList, groupId, userId, nickname, length=config.DEFAULT_CAPACITY):
         self.count["count"] = self.count["count"] + 1
         id = self.count["count"]
         self.room[str(id)] = {}
@@ -92,19 +92,25 @@ class Room:
         self.room[str(id)]["group"] = groupId
         self.room[str(id)]["user"] = userId
         self.room[str(id)]["nickname"] = nickname
+        self.room[str(id)]["length"] = int(length)
         self.room[str(id)]["time"] = time.time()
         return id
 
-    def addQueue(self, mem, id):
+    def reopen(self, roomId, passwd, length=None):
+        self.room[roomId]["passwd"] = passwd
+        if length:
+            self.room[roomId]["length"] = int(length)
+        return id
+
+    def addQueue(self, mem, id, nickname):
         """Add a member to the queue"""
-        self.queue[str(id)][str(mem)] = {'time': time.time()}
+        self.queue[str(id)][str(mem)] = {'time': time.time(), 'nickname': nickname}
 
     def getWaitLen(self, mem):
         mem = str(mem)
         """Return the queue length before mem"""
         for id, queue in self.queue.items():
-            count = 0
-            print(queue.keys())
+            count = 1
             for queueMem in queue.keys():
                 if mem == queueMem:
                     return count
@@ -129,10 +135,9 @@ class Room:
         del self.member[str(roomID)]
         del self.queue[str(roomID)]
 
-    def addMember(self, mem, id, ready=True):
+    def addMember(self, mem, id, nickname, ready=True):
         """Add a member to the target room"""
-
-        self.member[str(id)][str(mem)] = {'time': time.time(), 'ready': ready}
+        self.member[str(id)][str(mem)] = {'time': time.time(), 'ready': ready, 'nickname': nickname}
 
     def exitMem(self, mem, id):
         """Exit room"""
@@ -163,7 +168,7 @@ class Room:
 
     def getUserNumber(self, id):
         """Return the number of people in the room"""
-        if self.member[str(id)] == []:
+        if self.member[str(id)] is []:
             return 0
         return len(self.member[str(id)])
 
@@ -191,6 +196,7 @@ class Room:
 岛主QQ号：{room['user']}
 岛主QQ昵称：{room['nickname']}
 白菜头价格：{room["price"]}
+最大登岛人数为：{room["length"]}
 岛上人数：{self.getUserNumber(id)}
 排队人数：{self.getQueueLen(id)}
 """

@@ -3,18 +3,21 @@ from .Object import Room
 import config
 
 
-@on_command('close', aliases=('关闭',), only_to_me=False)
+@on_command('close', aliases=('关闭', '关门'), only_to_me=False)
 async def close(session: CommandSession):
-    details = session.get('details', prompt='请输入你想要关闭的岛ID')
-    details = str(details)
     room = Room()
-    if details not in room.room.keys():
-        await session.send('该岛不存在')
-    elif session.event['user_id'] not in [room.room[details]["user"], list(config.SUPERUSERS)[0]]:
-        await session.send('你没有关闭权限')
-    else:
-        room.close(details)
+    user_id = session.event['user_id']
+    # is_admin = session.event['user_id'] not in config.SUPERUSERS
+    room_id = None
+
+    for key, item in room.room.items():
+        if user_id == item['user']:
+            room_id = key
+    if room_id:
+        room.close(room_id)
         await session.send('已成功关闭岛门')
+    else:
+        await session.send('你没有正在开门的岛，请使用 /开门 命令，输入正确格式开启')
 
 
 @close.args_parser

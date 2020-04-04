@@ -10,11 +10,11 @@ async def add(session: CommandSession):
     try:
         details = int(details)
     except:
-        session.finish('格式错误，重新输入')
+        await session.finish('格式错误，重新输入')
     if (details > 110 or details < 90) and common.is_sunday():
-        session.finish('白菜头价格错误')
+        await session.finish('白菜头价格错误')
     elif details < 0:
-        session.finish('白菜头价格不能小于0')
+        await session.finish('白菜头价格不能小于0')
     priceList = Price()
     priceList.addPrice(config.GROUP_ID, session.event["user_id"], session.event["sender"]['nickname'], details)
     await session.send('添加成功')
