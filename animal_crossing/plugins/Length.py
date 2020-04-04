@@ -26,7 +26,7 @@ async def len(session: CommandSession):
         await session.send(output, at_sender=True)
 
 
-@on_command('member', aliases=('岛上成员',), only_to_me=True)
+@on_command('member', aliases=('岛上成员', '查看成员'), only_to_me=True)
 async def len(session: CommandSession):
     user = session.event['user_id']
     room = Room()
