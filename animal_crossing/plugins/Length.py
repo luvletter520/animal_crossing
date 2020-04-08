@@ -38,7 +38,7 @@ async def len(session: CommandSession):
             room_id = key
     if room_id:
         for key, item in room.member[room_id].items():
-            output += f"\n{item['nickname']}（{key}）"
+            output += f"\n{item['nickname']}（{key}），进房时间：{int((time.time()-item['time'])/60)}分钟"
         await session.send(output)
     else:
         await session.send('你没有正在开门的岛，请使用 /开门 命令，输入正确格式开启')
