@@ -1,6 +1,7 @@
 import json
 import time
 import config
+import common
 
 
 def singleton(cls):
@@ -36,23 +37,26 @@ class Room:
         self.count = {"count": 0}
         self.save()
 
+    def claerTurnipRoom(self):
+        list = self.room.copy()
+        for key, room in list.items():
+            if room['turnip'] is True:
+                room_id = str(key)
+                del self.room[room_id]
+                del self.member[room_id]
+                del self.queue[room_id]
+
     def read(self, var):
         if var == "room":
-            fo = open("animal_crossing/data/room.json")
-            self.room = json.load(fo)
+            self.room = common.read_json("animal_crossing/data/room.json", {})
         elif var == "member":
-            fo = open("animal_crossing/data/member.json")
-            self.member = json.load(fo)
+            self.member = common.read_json("animal_crossing/data/member.json", {})
         elif var == "history":
-            fo = open("animal_crossing/data/history.json")
-            self.history = json.load(fo)
+            self.history = common.read_json("animal_crossing/data/history.json", {})
         elif var == "count":
-            fo = open("animal_crossing/data/count.json")
-            self.count = json.load(fo)
+            self.count = common.read_json("animal_crossing/data/count.json", {"count": 0})
         elif var == "queue":
-            fo = open("animal_crossing/data/queue.json")
-            self.queue = json.load(fo)
-        fo.close()
+            self.queue = common.read_json("animal_crossing/data/queue.json", {})
 
     def write(self, var):
         if var == "room":
@@ -79,7 +83,7 @@ class Room:
         self.write("room")
         self.write("count")
 
-    def open(self, msgList, groupId, userId, nickname, length=config.DEFAULT_CAPACITY):
+    def open(self, passwd, remake, price, groupId, userId, nickname, length=config.DEFAULT_CAPACITY):
         self.count["count"] = self.count["count"] + 1
         id = self.count["count"]
         self.room[str(id)] = {}
@@ -87,8 +91,13 @@ class Room:
         self.member[str(id)] = {}
         self.queue[str(id)] = {}
         self.room[str(id)]["id"] = id
-        self.room[str(id)]["passwd"] = msgList[0]
-        self.room[str(id)]["price"] = msgList[1]
+        self.room[str(id)]["passwd"] = passwd.upper()
+        if price is None:
+            self.room[str(id)]["remake"] = remake
+            self.room[str(id)]["turnip"] = False
+        else:
+            self.room[str(id)]["price"] = price
+            self.room[str(id)]["turnip"] = True
         self.room[str(id)]["group"] = groupId
         self.room[str(id)]["user"] = userId
         self.room[str(id)]["nickname"] = nickname
@@ -191,7 +200,8 @@ class Room:
         else:
             for room in groupRoom.values():
                 id = room["id"]
-                output += f"""========================
+                if room['turnip'] is True:
+                    output += f"""========================
 岛ID：{room["id"]}
 岛主QQ号：{room['user']}
 岛主QQ昵称：{room['nickname']}
@@ -199,5 +209,15 @@ class Room:
 最大登岛人数为：{room["length"]}
 岛上人数：{self.getUserNumber(id)}
 排队人数：{self.getQueueLen(id)}
-"""
+                            """
+                else:
+                    output += f"""========================
+岛ID：{room["id"]}
+岛主QQ号：{room['user']}
+岛主QQ昵称：{room['nickname']}
+备注：{room["remake"]}
+最大登岛人数为：{room["length"]}
+岛上人数：{self.getUserNumber(id)}
+排队人数：{self.getQueueLen(id)}
+                            """
         return output

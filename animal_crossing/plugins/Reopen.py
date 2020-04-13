@@ -1,5 +1,6 @@
 from nonebot import on_command, CommandSession, scheduler, get_bot
 from .Object import Room
+import common
 import config
 import time
 import re
@@ -35,17 +36,15 @@ async def reopen(session: CommandSession):
                     i = 0
                     for queue_id, queue in room.queue[key].items():
                         room.addMember(queue_id, key, queue['nickname'], False)
-                        ididid = room.inQueue(queue_id)
-                        room.exitQueue(user, ididid)
+                        room.exitQueue(user, key)
                         bot = session.bot
                         await bot.send_msg(message_type="private",
                                            user_id=int(user),
-                                           message=f"岛【{key}】队列已经排到你，"
-                                           f"你需要在{config.QUEUE_TIME_OUT}分钟内输入 /准备 命令获取岛密码，"
-                                           f"{config.QUEUE_TIME_OUT}分钟内未输入准备命令将视为过号，过号须重新排队拿号")
+                                           message=common.read_format(key))
                         i += 1
                         if surplus == i:
                             break
+                return
             else:
                 await session.send(f"你尚未开启过岛，请使用 /开岛 命令，并输入正确格式开启")
     else:

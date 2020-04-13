@@ -1,5 +1,7 @@
 from nonebot import on_command, CommandSession
-GROUP_COMMANDLIST= """
+import config
+
+GROUP_COMMANDLIST = """
 【目前支持中英文"/" "!" "#"作为命令识别符】
 私聊命令需要加bot的QQ好友进行私聊命令
 必须加好友！必须加好友！必须加好友！
@@ -12,7 +14,7 @@ COMMANDLIST = """帮助文档：
 --------------------
 /开门 (需私聊)
 说明：需要提供岛密码和大头菜价格
-格式：/开门 岛密码|价格|最大登岛人数(可选，默认3人)
+格式：/开门 岛密码|价格|最大登岛人数(可选，默认""" + str(config.DEFAULT_CAPACITY) + """"人)
 示例1：/开门 GTX98|605
 示例2：/开门 GTX98|605|4
 --------------------
@@ -60,4 +62,3 @@ async def usage(session: CommandSession):
         await session.send(COMMANDLIST)
     else:
         await session.send(GROUP_COMMANDLIST, at_sender=True)
-

@@ -17,7 +17,6 @@ async def join(session: CommandSession):
     elif queue_id:
         await session.send('你已在队列中，请勿重复排队或排多个队伍')
     else:
-        # Room capacity
         if room.getUserNumber(details) < int(room.room[details]['length']):
             room.addMember(user_id, details, session.event["sender"]['nickname'])
             await session.send(f'成功进入岛\n岛密码为：{room.room[details]["passwd"]}\n请在出岛后使用 /退出 命令退出该岛')

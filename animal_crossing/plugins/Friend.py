@@ -13,3 +13,9 @@ async def handle_request(event: aiocqhttp.Event):
     except nonebot.CQHttpError as e:
         # print(e)
         pass
+
+
+# @nonebot.scheduler.scheduled_job('cron', minute='30', timezone='Asia/Shanghai')
+# async def _():
+#     room = Room()
+#     room.claerAll()

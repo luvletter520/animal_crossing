@@ -1,6 +1,7 @@
 from nonebot import on_command, CommandSession
 from .Object import Room
 import config
+import common
 
 
 @on_command('exit', aliases=('退出', '退出岛'), only_to_me=True)
@@ -12,18 +13,14 @@ async def exit(session: CommandSession):
     if id:
         room.exitMem(user, id)
         await session.send('成功退出岛')
-        if room.getQueueLen(id) > 0:
+        if room.getQueueLen(id) > 0 and room.getUserNumber(id) < int(room.room[id]['length']):
             users = room.queue[id]
             user = list(users.keys())[0]
             room.addMember(user, id, room.queue[id][user]['nickname'], False)
-            ididid = room.inQueue(user)
-            room.exitQueue(user, ididid)
-            bot = session.bot
-            await bot.send_msg(message_type="private",
-                               user_id=int(user),
-                               message=f"岛【{id}】队列已经排到你，"
-                               f"你需要在{config.QUEUE_TIME_OUT}分钟内输入 /准备 命令获取岛密码，"
-                               f"{config.QUEUE_TIME_OUT}分钟内未输入准备命令将视为过号，过号须重新排队拿号")
+            room.exitQueue(user, id)
+            await session.bot.send_msg(message_type="private",
+                                       user_id=int(user),
+                                       message=common.read_format(id))
     elif ididid:
         room.exitQueue(user, ididid)
         await session.send('成功退出队列')
@@ -57,18 +54,15 @@ async def kick(session: CommandSession):
             await session.bot.send_msg(message_type="private",
                                        user_id=int(user),
                                        message=f"你已被岛【{id}】的岛主移除出岛")
-            if room.getQueueLen(id) > 0:
+            if room.getQueueLen(id) > 0 and room.getUserNumber(id) < int(room.room[id]['length']):
                 users = room.queue[id]
                 user = list(users.keys())[0]
                 room.addMember(user, id, room.queue[id][user]['nickname'], False)
-                ididid = room.inQueue(user)
-                room.exitQueue(user, ididid)
+                room.exitQueue(user, id)
                 bot = session.bot
                 await bot.send_msg(message_type="private",
                                    user_id=int(user),
-                                   message=f"岛【{id}】队列已经排到你，"
-                                   f"你需要在{config.QUEUE_TIME_OUT}分钟内输入 /准备 命令获取岛密码，"
-                                   f"{config.QUEUE_TIME_OUT}分钟内未输入准备命令将视为过号，过号须重新排队拿号")
+                                   message=common.read_format(id))
         else:
             await session.finish("未找到对应QQ号人员")
 
