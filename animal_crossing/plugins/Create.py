@@ -35,15 +35,13 @@ async def create(session: CommandSession):
         if formatDetails[2]:
             room_id = room.open(formatDetails[0], formatDetails[1], None, config.GROUP_ID, session.event['user_id'],
                                 session.event["sender"]['nickname'],
-                                int(TurnipDetails[2]))
+                                int(formatDetails[2]))
         else:
             room_id = room.open(formatDetails[0], formatDetails[1], None, config.GROUP_ID, session.event['user_id'],
                                 session.event["sender"]['nickname'])
         await session.send(f'发布成功\n岛ID为：{room_id}')
-    if TurnipDetails is None and formatDetails is not None:
+    if TurnipDetails is None and formatDetails is None:
         await session.finish('格式错误，岛密码必须为5位字母或数字，价格必须大于10并小于1000，最大登岛人数为1～7人')
-    if formatDetails is None and TurnipDetails is not None:
-        await session.finish('格式错误')
 
 
 @create.args_parser
@@ -60,7 +58,7 @@ async def _(session: CommandSession):
 
 # 表格内容解析
 async def getDetails(str):
-    match = re.match(r'([0-9A-Za-z]{5})[|]([\S\s]{1,30})[|]{0,1}([1-7]{0,1})', str)
+    match = re.match(r'([0-9A-Za-z]{5})[|]([^|]{1,30})[|]{0,1}([1-7]{0,1})', str)
     if match:
         return match.groups()
     return None
