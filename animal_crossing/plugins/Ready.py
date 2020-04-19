@@ -31,7 +31,7 @@ async def ready(session: CommandSession):
             await session.send('准备失败，你可能未在队列中或超过准备时间，请排队拿号')
 
 
-@scheduler.scheduled_job('interval', seconds=30)
+@scheduler.scheduled_job('interval', seconds=60)
 async def _():
     room = Room()
     now = time.time()
