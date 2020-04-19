@@ -5,24 +5,20 @@ import common
 
 
 @on_command('exit', aliases=('退出', '退出岛'), only_to_me=True)
-async def exit(session: CommandSession):
-    user = str(session.event['user_id'])
+async def exit_room(session: CommandSession):
     room = Room()
-    id = room.inMember(user)
-    ididid = room.inQueue(user)
-    if id:
-        room.exitMem(user, id)
+    user_id = session.event['user_id']
+    if await room.check_group_member(user_id) is None:
+        return
+    user_id = str(user_id)
+    room_id = room.in_member(user_id)
+    queue_id = room.in_queue(user_id)
+    if room_id:
+        room.exit_mem(user_id, room_id)
         await session.send('成功退出岛')
-        if room.getQueueLen(id) > 0 and room.getUserNumber(id) < int(room.room[id]['length']):
-            users = room.queue[id]
-            user = list(users.keys())[0]
-            room.addMember(user, id, room.queue[id][user]['nickname'], False)
-            room.exitQueue(user, id)
-            await session.bot.send_msg(message_type="private",
-                                       user_id=int(user),
-                                       message=common.read_format(id))
-    elif ididid:
-        room.exitQueue(user, ididid)
+        await room.next_member(room_id)
+    elif queue_id:
+        room.exit_queue(user_id, queue_id)
         await session.send('成功退出队列')
     else:
         await session.send('当前不在任何岛和队列中')
@@ -32,10 +28,11 @@ async def exit(session: CommandSession):
 async def kick(session: CommandSession):
     details = session.get('details', prompt='请输入你要踢的人QQ号')
     room = Room()
+    user_id = session.event['user_id']
+    if await room.check_group_member(user_id) is None:
+        return
     room_id = None
-    users = []
     if details == '全部' or details.upper() == 'ALL':
-        user_id = session.event['user_id']
         for key, item in room.room.items():
             if user_id == item['user']:
                 room_id = key
@@ -45,24 +42,16 @@ async def kick(session: CommandSession):
     else:
         users = [str(details)]
     for user in users:
-        id = room.inMember(user)
-        if id:
-            if room.room[id]['user'] != session.event['user_id']:
+        room_id = room.in_member(user)
+        if room_id:
+            if room.room[room_id]['user'] != session.event['user_id']:
                 await session.finish("未找到对应QQ号人员")
-            room.exitMem(user, id)
+            room.exit_mem(user, room_id)
             await session.send(f'成功将{user}踢出岛')
             await session.bot.send_msg(message_type="private",
                                        user_id=int(user),
-                                       message=f"你已被岛【{id}】的岛主移除出岛")
-            if room.getQueueLen(id) > 0 and room.getUserNumber(id) < int(room.room[id]['length']):
-                users = room.queue[id]
-                user = list(users.keys())[0]
-                room.addMember(user, id, room.queue[id][user]['nickname'], False)
-                room.exitQueue(user, id)
-                bot = session.bot
-                await bot.send_msg(message_type="private",
-                                   user_id=int(user),
-                                   message=common.read_format(id))
+                                       message=f"你已被岛【{room_id}】的岛主移除出岛")
+            await room.next_member(room_id)
         else:
             await session.finish("未找到对应QQ号人员")
 

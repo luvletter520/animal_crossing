@@ -9,20 +9,25 @@ async def join(session: CommandSession):
     details = str(details)
     room = Room()
     user_id = str(session.event['user_id'])
-    queue_id = room.inQueue(user_id)
+    if await room.check_group_member(session.event['user_id']) is None:
+        return
+    queue_id = room.in_queue(user_id)
     if details not in room.room.keys():
         await session.send('该岛不存在')
-    elif user_id in room.member[details].keys():
+    elif user_id in room.member[details].keys() and room.member[details][user_id]['ready'] is True:
         await session.send('你已在岛中，岛密码为：' + room.room[details]["passwd"])
     elif queue_id:
         await session.send('你已在队列中，请勿重复排队或排多个队伍')
     else:
-        if room.getUserNumber(details) < int(room.room[details]['length']):
-            room.addMember(user_id, details, session.event["sender"]['nickname'])
-            await session.send(f'成功进入岛\n岛密码为：{room.room[details]["passwd"]}\n请在出岛后使用 /退出 命令退出该岛')
+        if room.get_user_number(details) < int(room.room[details]['length']):
+            room.add_member(user_id, details, session.event["sender"]['nickname'])
+            await session.send(f'成功进入岛\n'
+                               f'岛密码为：{room.room[details]["passwd"]}\n'
+                               f'请在出岛后使用 /退出 命令退出该岛\n'
+                               f'大头菜房请勿跑多趟，每次排队仅能跑一趟！')
         else:
-            room.addQueue(user_id, details, session.event["sender"]['nickname'])
-            length = room.getWaitLen(user_id)
+            room.add_queue(user_id, details, session.event["sender"]['nickname'])
+            length = room.get_wait_len(user_id)
             await session.send(f"成功进入队列\n"
                                f"前方队列长度为：{length}人")
 

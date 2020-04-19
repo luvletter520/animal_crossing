@@ -1,5 +1,6 @@
 from nonebot import on_command, CommandSession
 import config
+from .Object import Room
 
 GROUP_COMMANDLIST = """
 【目前支持中英文"/" "!" "#"作为命令识别符】

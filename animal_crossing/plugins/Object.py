@@ -2,6 +2,7 @@ import json
 import time
 import config
 import common
+from nonebot import get_bot
 
 
 def singleton(cls):
@@ -21,38 +22,47 @@ class Room:
         self.room = {}
         self.member = {}
         self.queue = {}
-        self.history = {}
+        self.exclude = []
         self.count = {}
         self.read("room")
         self.read("count")
         self.read("member")
         self.read("queue")
-        self.read("history")
+        self.read("exclude")
 
-    def claerAll(self):
+    def clear_all(self):
         self.room = {}
         self.member = {}
         self.queue = {}
-        self.history = {}
         self.count = {"count": 0}
         self.save()
 
-    def claerTurnipRoom(self):
-        list = self.room.copy()
-        for key, room in list.items():
+    def clear_turnip_room(self):
+        room_list = self.room.copy()
+        for key, room in room_list.items():
             if room['turnip'] is True:
                 room_id = str(key)
                 del self.room[room_id]
                 del self.member[room_id]
                 del self.queue[room_id]
 
+    async def check_group_member(self, user_id):
+        try:
+            if user_id in config.SUPERUSERS:
+                return user_id
+            bot = get_bot()
+            member = await bot.get_group_member_info(group_id=config.GROUP_ID, user_id=user_id)
+            return member
+        except Exception as e:
+            return None
+
     def read(self, var):
         if var == "room":
             self.room = common.read_json("animal_crossing/data/room.json", {})
         elif var == "member":
             self.member = common.read_json("animal_crossing/data/member.json", {})
-        elif var == "history":
-            self.history = common.read_json("animal_crossing/data/history.json", {})
+        elif var == "exclude":
+            self.exclude = common.read_json("animal_crossing/data/exclude.json", [])
         elif var == "count":
             self.count = common.read_json("animal_crossing/data/count.json", {"count": 0})
         elif var == "queue":
@@ -65,9 +75,9 @@ class Room:
         elif var == "member":
             fo = open("animal_crossing/data/member.json", "w")
             j = json.dumps(self.member)
-        elif var == "history":
-            fo = open("animal_crossing/data/history.json", "w")
-            j = json.dumps(self.history)
+        elif var == "exclude":
+            fo = open("animal_crossing/data/exclude.json", "w")
+            j = json.dumps(self.exclude)
         elif var == "count":
             fo = open("animal_crossing/data/count.json", "w")
             j = json.dumps(self.count)
@@ -82,43 +92,44 @@ class Room:
         self.write("queue")
         self.write("room")
         self.write("count")
+        self.write("exclude")
 
     def open(self, passwd, remake, price, groupId, userId, nickname, length=config.DEFAULT_CAPACITY):
         self.count["count"] = self.count["count"] + 1
-        id = self.count["count"]
-        self.room[str(id)] = {}
-        self.member[str(id)] = {}
-        self.member[str(id)] = {}
-        self.queue[str(id)] = {}
-        self.room[str(id)]["id"] = id
-        self.room[str(id)]["passwd"] = passwd.upper()
+        room_id = self.count["count"]
+        self.room[str(room_id)] = {}
+        self.member[str(room_id)] = {}
+        self.member[str(room_id)] = {}
+        self.queue[str(room_id)] = {}
+        self.room[str(room_id)]["id"] = room_id
+        self.room[str(room_id)]["passwd"] = passwd.upper()
         if price is None:
-            self.room[str(id)]["remake"] = remake
-            self.room[str(id)]["turnip"] = False
+            self.room[str(room_id)]["remake"] = remake.strip()
+            self.room[str(room_id)]["turnip"] = False
         else:
-            self.room[str(id)]["price"] = price
-            self.room[str(id)]["turnip"] = True
-        self.room[str(id)]["group"] = groupId
-        self.room[str(id)]["user"] = userId
-        self.room[str(id)]["nickname"] = nickname
-        self.room[str(id)]["length"] = int(length)
-        self.room[str(id)]["time"] = time.time()
-        return id
+            self.room[str(room_id)]["price"] = price
+            self.room[str(room_id)]["turnip"] = True
+        self.room[str(room_id)]["group"] = groupId
+        self.room[str(room_id)]["user"] = userId
+        self.room[str(room_id)]["nickname"] = nickname
+        self.room[str(room_id)]["length"] = int(length)
+        self.room[str(room_id)]["time"] = time.time()
+        return room_id
 
-    def reopen(self, roomId, passwd, length=None):
-        self.room[roomId]["passwd"] = passwd
+    def reopen(self, room_id, passwd, length=None):
+        self.room[room_id]["passwd"] = passwd
         if length:
-            self.room[roomId]["length"] = int(length)
-        return id
+            self.room[room_id]["length"] = int(length)
+        return room_id
 
-    def addQueue(self, mem, id, nickname):
+    def add_queue(self, mem, room_id, nickname):
         """Add a member to the queue"""
-        self.queue[str(id)][str(mem)] = {'time': time.time(), 'nickname': nickname}
+        self.queue[str(room_id)][str(mem)] = {'time': time.time(), 'nickname': nickname}
 
-    def getWaitLen(self, mem):
+    def get_wait_len(self, mem):
         mem = str(mem)
         """Return the queue length before mem"""
-        for id, queue in self.queue.items():
+        for queue_id, queue in self.queue.items():
             count = 1
             for queueMem in queue.keys():
                 if mem == queueMem:
@@ -126,98 +137,102 @@ class Room:
                 count += 1
         return None
 
-    def getQueueLen(self, id):
+    def get_queue_len(self, room_id):
         """Return the queue lenth"""
+        return len(self.queue[str(room_id)].keys())
 
-        id = str(id)
-        count = 0
-        for i in self.queue[id]:
-            count += 1
-        return count
-
-    def close(self, roomID):
+    def close(self, room_id):
         """Close one room"""
+        del self.room[str(room_id)]
+        del self.member[str(room_id)]
+        del self.queue[str(room_id)]
 
-        self.history[str(roomID)] = self.room[str(roomID)]
-        self.history[str(roomID)]["number"] = len(self.queue[str(roomID)])
-        del self.room[str(roomID)]
-        del self.member[str(roomID)]
-        del self.queue[str(roomID)]
-
-    def addMember(self, mem, id, nickname, ready=True):
+    def add_member(self, mem, room_id, nickname, ready=True):
         """Add a member to the target room"""
-        self.member[str(id)][str(mem)] = {'time': time.time(), 'ready': ready, 'nickname': nickname}
+        self.member[str(room_id)][str(mem)] = {'time': time.time(), 'ready': ready, 'nickname': nickname}
 
-    def exitMem(self, mem, id):
+    def exit_mem(self, mem, room_id):
         """Exit room"""
-        if str(id) in self.member:
-            if str(mem) in self.member[str(id)]:
-                del self.member[str(id)][str(mem)]
+        if str(room_id) in self.member:
+            if str(mem) in self.member[str(room_id)]:
+                del self.member[str(room_id)][str(mem)]
 
-    def exitQueue(self, mem, id):
+    def exit_queue(self, mem, room_id):
         """Exit queue"""
+        del self.queue[str(room_id)][str(mem)]
 
-        del self.queue[str(id)][str(mem)]
-
-    def inMember(self, mem):
+    def in_member(self, mem):
         """Return the mem's room id"""
-
-        for id, memList in self.member.items():
-            if str(mem) in memList.keys():
-                return id
+        for member_id, member_list in self.member.items():
+            if str(mem) in member_list.keys():
+                return member_id
         return None
 
-    def inQueue(self, mem):
+    def in_queue(self, mem):
         """Return the mem's queue id"""
-
-        for id, memList in self.queue.items():
-            if str(mem) in memList.keys():
-                return id
+        for queue_id, member_list in self.queue.items():
+            if str(mem) in member_list.keys():
+                return queue_id
         return None
 
-    def getUserNumber(self, id):
+    def get_user_number(self, id):
         """Return the number of people in the room"""
         if self.member[str(id)] is []:
             return 0
         return len(self.member[str(id)])
 
-    def getGroupList(self):
-        """Get tencent groups list"""
-
-        groupList = []
-        for value in self.room.values():
-            groupList.append(value["group"])
-        return groupList
-
-    def toString(self, groupId):
+    def to_string(self, group_id, room_id=None):
         output = ''
-        groupRoom = {}
-        for singleRoom in self.room.values():
-            if singleRoom["group"] == groupId:
-                groupRoom[singleRoom["id"]] = singleRoom
-        if groupRoom == {}:
+        group_room = {}
+        for room in self.room.values():
+            if room["group"] == group_id and room_id is None:
+                group_room[room["id"]] = room
+            elif room_id == room["id"]:
+                group_room[room["id"]] = room
+        if group_room == {}:
             output += '当前暂无岛开门'
         else:
-            for room in groupRoom.values():
-                id = room["id"]
-                if room['turnip'] is True:
-                    output += f"""========================
+            i = 0
+            for room in group_room.values():
+                if i > 0:
+                    output += '\n'
+                output += self.room_to_string(room)
+                i += 1
+        return output
+
+    def room_to_string(self, room):
+        room_id = room["id"]
+        if room['turnip'] is True:
+            return f"""========================
 岛ID：{room["id"]}
 岛主QQ号：{room['user']}
 岛主QQ昵称：{room['nickname']}
-白菜头价格：{room["price"]}
+大菜头价格：{room["price"]}
 最大登岛人数为：{room["length"]}
-岛上人数：{self.getUserNumber(id)}
-排队人数：{self.getQueueLen(id)}
-                            """
-                else:
-                    output += f"""========================
+岛上人数：{self.get_user_number(room_id)}
+排队人数：{self.get_queue_len(room_id)}"""
+        else:
+            return f"""========================
 岛ID：{room["id"]}
 岛主QQ号：{room['user']}
 岛主QQ昵称：{room['nickname']}
 备注：{room["remake"]}
 最大登岛人数为：{room["length"]}
-岛上人数：{self.getUserNumber(id)}
-排队人数：{self.getQueueLen(id)}
-                            """
-        return output
+岛上人数：{self.get_user_number(room_id)}
+排队人数：{self.get_queue_len(room_id)}"""
+
+    async def next_member(self, room_id):
+        bot = get_bot()
+        queue_ids = list(self.queue[room_id].keys())
+        if len(queue_ids) > 0 and self.get_user_number(room_id) < int(self.room[room_id]['length']):
+            user = queue_ids[0]
+            self.add_member(user, room_id, self.queue[room_id][user]['nickname'], False)
+            self.exit_queue(user, room_id)
+            await bot.send_msg(message_type="private",
+                               user_id=int(user),
+                               message=common.read_format(room_id))
+            if len(queue_ids) > 1:
+                user = queue_ids[1]
+                await bot.send_msg(message_type="private",
+                                   user_id=int(user),
+                                   message="你当前在排队队伍第一位，下一位就轮到你了，请提前做好登岛准备，如岛上成员长时间未退出房间，可以选择在群里@他或私聊他。")

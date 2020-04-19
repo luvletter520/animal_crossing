@@ -14,34 +14,34 @@ CREATE_USAGE = """请将如下格式填写完整并发送
 async def create(session: CommandSession):
     room = Room()
     user_id = session.event['user_id']
+    if await room.check_group_member(user_id) is None:
+        return
     for key, item in room.room.items():
         if user_id == item['user']:
             await session.finish(f'你已有岛开启中，岛ID为：{key}，如需更新岛密码请使用 /重开 命令，如需关闭岛请使用 /关门 命令')
     details = session.get('details', prompt=CREATE_USAGE)
-    TurnipDetails = await getTurnipDetails(details)
-    formatDetails = await getDetails(details)
-    if TurnipDetails is not None:
-        room_id = 0
-        if TurnipDetails[2]:
-            room_id = room.open(TurnipDetails[0], None, TurnipDetails[1], config.GROUP_ID, session.event['user_id'],
+    turnip_details = await get_turnip_details(details)
+    format_details = await get_details(details)
+    if turnip_details is not None:
+        if turnip_details[2]:
+            room_id = room.open(turnip_details[0], None, turnip_details[1], config.GROUP_ID, session.event['user_id'],
                                 session.event["sender"]['nickname'],
-                                int(TurnipDetails[2]))
+                                int(turnip_details[2]))
         else:
-            room_id = room.open(TurnipDetails[0], None, TurnipDetails[1], config.GROUP_ID, session.event['user_id'],
+            room_id = room.open(turnip_details[0], None, turnip_details[1], config.GROUP_ID, session.event['user_id'],
                                 session.event["sender"]['nickname'])
         await session.send(f'发布成功\n类型:大头菜\n岛ID为：{room_id}')
-    elif formatDetails is not None:
-        room_id = 0
-        if formatDetails[2]:
-            room_id = room.open(formatDetails[0], formatDetails[1], None, config.GROUP_ID, session.event['user_id'],
+    elif format_details is not None:
+        if format_details[2]:
+            room_id = room.open(format_details[0], format_details[1], None, config.GROUP_ID, session.event['user_id'],
                                 session.event["sender"]['nickname'],
-                                int(formatDetails[2]))
+                                int(format_details[2]))
         else:
-            room_id = room.open(formatDetails[0], formatDetails[1], None, config.GROUP_ID, session.event['user_id'],
+            room_id = room.open(format_details[0], format_details[1], None, config.GROUP_ID, session.event['user_id'],
                                 session.event["sender"]['nickname'])
         await session.send(f'发布成功\n岛ID为：{room_id}')
-    if TurnipDetails is None and formatDetails is None:
-        await session.finish('格式错误，岛密码必须为5位字母或数字，价格必须大于10并小于1000，最大登岛人数为1～7人')
+    if turnip_details is None and format_details is None:
+        await session.finish('格式错误')
 
 
 @create.args_parser
@@ -56,34 +56,55 @@ async def _(session: CommandSession):
     session.state[session.current_key] = stripped_arg
 
 
+@on_command('备注', aliases=('修改备注', '更新备注', 'remake'), only_to_me=True)
+async def edit_remake(session: CommandSession):
+    room = Room()
+    user_id = session.event['user_id']
+    if await room.check_group_member(user_id) is None:
+        return
+    remake = session.current_arg_text.strip()
+    room_list = room.room.copy()
+    if len(remake) == 0:
+        await session.finish(f"备注不能为空")
+    for key, item in room_list.items():
+        if user_id == item['user']:
+            if item['turnip'] is False:
+                item['remake'] = remake
+                room.room[key] = item
+                await session.finish(f"修改备注成功")
+            else:
+                await session.finish(f"大头菜房无法修改备注")
+    await session.send(f"你尚未开启过岛，请使用 /开岛 命令，并输入正确格式开启")
+
+
 # 表格内容解析
-async def getDetails(str):
-    match = re.match(r'([0-9A-Za-z]{5})[|]([^|]{1,30})[|]{0,1}([1-7]{0,1})', str)
+async def get_details(text):
+    match = re.match(r'^([0-9A-Za-z]{5})[|]([^|]{1,30})[|]{0,1}([1-7]{0,1})$', text)
     if match:
         return match.groups()
     return None
 
 
-async def getTurnipDetails(str):
-    match = re.match(r'([0-9A-Za-z]{5})[|]([\d]{2,3})[|]{0,1}([1-7]{0,1})', str)
+async def get_turnip_details(text):
+    match = re.match(r'^([0-9A-Za-z]{5})[|]([\d]{2,3})[|]{0,1}([1-7]{0,1})$', text)
     if match:
         return match.groups()
     return None
 
 
 @scheduler.scheduled_job('cron', hour='8,12,24', timezone='Asia/Shanghai')
-async def _():
+async def clear_turnip():
     room = Room()
-    room.claerTurnipRoom()
+    room.clear_turnip_room()
 
 
 @scheduler.scheduled_job('cron', hour='4', timezone='Asia/Shanghai')
-async def _():
+async def clear_all():
     room = Room()
-    room.claerAll()
+    room.clear_all()
 
 
 @scheduler.scheduled_job('interval', minutes=1)
-async def _():
+async def save_room():
     room = Room()
     room.save()
