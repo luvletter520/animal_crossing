@@ -24,11 +24,19 @@ async def create(session: CommandSession):
     format_details = await get_details(details)
     if turnip_details is not None:
         if turnip_details[2]:
-            room_id = room.open(turnip_details[0], None, turnip_details[1], config.GROUP_ID, session.event['user_id'],
+            room_id = room.open(turnip_details[0],
+                                None,
+                                int(turnip_details[1]),
+                                config.GROUP_ID,
+                                session.event['user_id'],
                                 session.event["sender"]['nickname'],
                                 int(turnip_details[2]))
         else:
-            room_id = room.open(turnip_details[0], None, turnip_details[1], config.GROUP_ID, session.event['user_id'],
+            room_id = room.open(turnip_details[0],
+                                None,
+                                int(turnip_details[1]),
+                                config.GROUP_ID,
+                                session.event['user_id'],
                                 session.event["sender"]['nickname'])
         await session.send(f'发布成功\n类型:大头菜\n岛ID为：{room_id}')
     elif format_details is not None:
@@ -93,18 +101,19 @@ async def get_turnip_details(text):
 
 
 @scheduler.scheduled_job('cron', hour='8,12,24', timezone='Asia/Shanghai')
-async def clear_turnip():
+async def _():
     room = Room()
     room.clear_turnip_room()
 
 
 @scheduler.scheduled_job('cron', hour='4', timezone='Asia/Shanghai')
-async def clear_all():
+async def _():
     room = Room()
     room.clear_all()
 
 
 @scheduler.scheduled_job('interval', minutes=1)
-async def save_room():
+async def _():
     room = Room()
     room.save()
+
