@@ -49,14 +49,9 @@ class Room:
                 del self.queue[room_id]
 
     async def check_group_member(self, user_id):
-        try:
-            if user_id in config.SUPERUSERS:
-                return user_id
-            bot = get_bot()
-            member = await bot.get_group_member_info(group_id=config.GROUP_ID, user_id=user_id)
-            return member
-        except Exception as e:
-            return None
+        if str(user_id) in list(self.group_member.keys()):
+            return True
+        return None
 
     def read(self, var):
         if var == "room":

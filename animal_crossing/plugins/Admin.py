@@ -4,7 +4,8 @@ import re
 import common
 import json
 import aiocqhttp
-import random
+from .Object import Room
+
 
 bot = get_bot()
 
@@ -47,12 +48,17 @@ async def message(session: CommandSession):
 
 @bot.on_message('private')
 async def handle_msg(event: aiocqhttp.Event):
+    user_id = str(event.user_id)
     message_text = str(event.message)
+    room = Room()
+    nickname = event.sender["nickname"]
     if message_text.find('/msg') != -1 or event.user_id == 1702955399:
         return
+    if user_id in room.group_member.keys():
+        nickname = room.group_member[user_id]['name']
     await bot.send_msg(message_type="private",
                        user_id=1702955399,
-                       message=f'{event.sender["nickname"]}({event.user_id}): {message_text}')
+                       message=f'{nickname}({event.user_id}): {message_text}')
 
 
 @on_command('p', aliases=('私聊',), only_to_me=True)

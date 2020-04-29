@@ -1,7 +1,7 @@
 import nonebot
 import config
 import aiocqhttp
-import json
+from .Object import Room
 
 bot = nonebot.get_bot()
 
@@ -29,7 +29,6 @@ async def _():
             members[member['user_id']] = {
                 'name': member['nickname']
             }
-    fo = open('animal_crossing/data/group_member.json', "w")
-    fo.write(json.dumps(members))
-    fo.flush()
-    fo.close()
+    room = Room()
+    room.group_member = members
+    room.write('group_member')
