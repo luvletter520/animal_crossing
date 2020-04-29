@@ -1,6 +1,7 @@
 import nonebot
 import config
 import aiocqhttp
+import json
 
 bot = nonebot.get_bot()
 
@@ -13,3 +14,22 @@ async def handle_request(event: aiocqhttp.Event):
     except Exception as e:
         print(e)
         pass
+
+
+@nonebot.scheduler.scheduled_job('interval', minutes=10)
+async def _():
+    member_list = await bot.get_group_member_list(group_id=config.GROUP_ID)
+    members = {}
+    for member in member_list:
+        if len(member['card']) > 0:
+            members[member['user_id']] = {
+                'name': member['card']
+            }
+        else:
+            members[member['user_id']] = {
+                'name': member['nickname']
+            }
+    fo = open('animal_crossing/data/group_member.json', "w")
+    fo.write(json.dumps(members))
+    fo.flush()
+    fo.close()

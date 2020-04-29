@@ -5,7 +5,7 @@ import config
 
 @on_command('join', aliases=('进房', '排队', '参加'), only_to_me=True)
 async def join(session: CommandSession):
-    details = session.get('details', prompt='请输入你想要进入的岛ID')
+    details = session.current_arg_text.strip()
     details = str(details)
     room = Room()
     user_id = str(session.event['user_id'])

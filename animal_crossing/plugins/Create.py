@@ -74,11 +74,16 @@ async def edit_remake(session: CommandSession):
     room_list = room.room.copy()
     if len(remake) == 0:
         await session.finish(f"备注不能为空")
-    for key, item in room_list.items():
+    for room_id, item in room_list.items():
         if user_id == item['user']:
             if item['turnip'] is False:
                 item['remake'] = remake
-                room.room[key] = item
+                room.room[room_id] = item
+                member_ids = list(room.queue[room_id].keys()) + list(room.member[room_id].keys())
+                for member_id in member_ids:
+                    await session.bot.send_msg(message_type="private",
+                                               user_id=int(member_id),
+                                               message=f"岛【{room_id}】修改备注\n新备注：{remake}")
                 await session.finish(f"修改备注成功")
             else:
                 await session.finish(f"大头菜房无法修改备注")
@@ -100,20 +105,7 @@ async def get_turnip_details(text):
     return None
 
 
-@scheduler.scheduled_job('cron', hour='8,12,24', timezone='Asia/Shanghai')
-async def _():
-    room = Room()
-    room.clear_turnip_room()
-
-
-@scheduler.scheduled_job('cron', hour='4', timezone='Asia/Shanghai')
-async def _():
-    room = Room()
-    room.clear_all()
-
-
 @scheduler.scheduled_job('interval', minutes=1)
 async def _():
     room = Room()
     room.save()
-

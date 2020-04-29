@@ -2,7 +2,9 @@ import datetime
 import os
 import json
 import config
-import logging
+# import logging
+#
+# log = logging.getLogger('bot')
 
 
 # 判断今天是否为周末
@@ -28,7 +30,3 @@ def read_format(room):
     return f"岛【{room}】队列已经排到你，" \
         f"你需要在{config.QUEUE_TIME_OUT}分钟内输入 /准备 命令获取岛密码，" \
         f"{config.QUEUE_TIME_OUT}分钟内未输入准备命令将视为过号，过号须重新排队拿号"
-
-
-def send_msg():
-    logging.info('info 信息')

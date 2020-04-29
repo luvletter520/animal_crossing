@@ -1,4 +1,4 @@
-from nonebot import on_command, CommandSession
+from nonebot import on_command, CommandSession, scheduler
 from .Object import Room
 import config
 
@@ -27,3 +27,9 @@ async def close(session: CommandSession):
                                        message=f"岛【{room_id}】已关闭，已自动退出。")
     else:
         await session.send('你没有正在开门的岛，请使用 /开门 命令，输入正确格式开启')
+
+
+@scheduler.scheduled_job('cron', hour=4, timezone='Asia/Shanghai')
+async def _():
+    room = Room()
+    room.clear_all()

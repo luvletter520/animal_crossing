@@ -14,19 +14,25 @@ async def ready(session: CommandSession):
     if room_id:
         member = room.member[room_id]
         now = time.time()
-        if (now - member[user]['time']) > config.QUEUE_TIME_OUT * 60:
+        if (now - member[user]['time']) > config.QUEUE_TIME_OUT * 60 and member[user]['ready'] is False:
             await session.send('准备失败，你已超过准备时间，请重新输入 /排队 命令排队拿号')
             room.exit_mem(user, room_id)
             await room.next_member(room_id)
         else:
+            room_info = room.room[str(room_id)]
+            # if room.member[room_id][user]['ready'] is False:
+            #     await session.send(f'岛【{room_id}】有成员进入'
+            #                        f'QQ号：{user}'
+            #                        f'QQ昵称：{room.member[user]["nickname"]}')
             room.member[room_id][user]['ready'] = True
             await session.send(f'成功进入岛\n'
-                               f'岛密码为：{room.room[str(room_id)]["passwd"]}\n'
+                               f'岛密码为：{room_info["passwd"]}\n'
                                f'请在出岛后使用 /退出 命令退出该岛\n'
                                f'大头菜房请勿跑多趟，每次排队仅能跑一趟！')
     else:
-        if room.in_queue(user):
-            await session.send(f'你已在岛【{room_id}】的队列中')
+        room_id = room.in_queue(user)
+        if room_id:
+            await session.send(f'你已在岛【{room_id}】的队列中， 目前还没轮到你，请耐心等待')
         else:
             await session.send('准备失败，你可能未在队列中或超过准备时间，请排队拿号')
 

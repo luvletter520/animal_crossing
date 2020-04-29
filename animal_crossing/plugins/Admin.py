@@ -3,6 +3,10 @@ import config
 import re
 import common
 import json
+import aiocqhttp
+import random
+
+bot = get_bot()
 
 
 @on_command('msg', aliases=('message', '发言'), only_to_me=True)
@@ -21,6 +25,9 @@ async def gag(session: CommandSession):
     if match and user_id in config.SUPERUSERS:
         groups = match.groups()
         await session.bot.set_group_ban(group_id=config.GROUP_ID, user_id=int(groups[0]), duration=int(groups[1]) * 60)
+        await session.bot.send_msg(message_type="group",
+                                   group_id=config.GROUP_ID,
+                                   message=f'QQ号：{groups[0]} 被管理员 叮咚 禁言{groups[1]}分钟')
         await session.send('禁言成功！')
 
 
@@ -36,3 +43,29 @@ async def message(session: CommandSession):
             fo.write(json.dumps(info))
             fo.flush()
             fo.close()
+
+
+@bot.on_message('private')
+async def handle_msg(event: aiocqhttp.Event):
+    message_text = str(event.message)
+    if message_text.find('/msg') != -1 or event.user_id == 1702955399:
+        return
+    await bot.send_msg(message_type="private",
+                       user_id=1702955399,
+                       message=f'{event.sender["nickname"]}({event.user_id}): {message_text}')
+
+
+@on_command('p', aliases=('私聊',), only_to_me=True)
+async def gag(session: CommandSession):
+    user_id = session.event['user_id']
+    arg = session.current_arg_text.strip()
+    match = re.match(r'^([0-9]{6,15})[|]([\s\S]{1,300})$', arg)
+    if match and user_id in config.SUPERUSERS:
+        groups = match.groups()
+        receiver = int(groups[0])
+        message_text = groups[1]
+        tip = '发送成功！'
+        await session.bot.send_msg(message_type="private",
+                                   user_id=receiver,
+                                   message=message_text)
+        await session.send(tip)

@@ -13,4 +13,4 @@ async def show(session: CommandSession):
     room_id = None
     if arg.isdigit():
         room_id = int(arg)
-    await session.send(room.to_string(config.GROUP_ID, room_id))
+    await session.send(room.to_string(config.GROUP_ID, room_id, session.event['message_type'] == 'group'))
