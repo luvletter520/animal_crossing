@@ -8,20 +8,20 @@ async def join(session: CommandSession):
     details = str(details)
     room = Room()
     user_id = str(session.event['user_id'])
+    room_id = room.in_member(user_id)
     if await room.check_group_member(session.event['user_id']) is None:
         return
-    queue_id = room.in_queue(user_id)
     if details not in room.room.keys():
         await session.send('该岛不存在')
-    elif user_id in room.member[details].keys():
-        if room.member[details][user_id]['ready'] is True:
-            await session.send('你已在岛中，岛密码为：' + room.room[details]["passwd"])
+    elif room_id:
+        if room.member[room_id][user_id]['ready'] is True:
+            await session.send(f'你已在岛【{room_id}】中，岛密码为：' + room.room[room_id]["passwd"])
         else:
-            await session.send('你尚未准备')
-    elif queue_id:
+            await session.send(f'你已在岛【{room_id}】中，你尚未准备')
+    elif room.in_queue(user_id) is not None:
         await session.send('你已在队列中，请勿重复排队或排多个队伍')
     else:
-        if room.get_user_number(details) < int(room.room[details]['length']):
+        if room.get_user_number(details) < int(room.room[details]['length']) and len(room.queue[details]) == 0:
             await room.add_member(user_id, details, session.event["sender"]['nickname'])
             await session.send(f'成功进入岛\n'
                                f'岛密码为：{room.room[details]["passwd"]}\n'

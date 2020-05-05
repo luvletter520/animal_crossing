@@ -22,20 +22,20 @@ async def reopen(session: CommandSession):
     details = session.get('details', prompt=CREATE_USAGE)
     format_details = await get_details(details)
     is_reopen = False
+    bot = session.bot
     if format_details:
         for room_id, item in room.room.items():
             if user == item['user']:
                 room.reopen(room_id, format_details[0], format_details[1])
                 await session.send(f"重开成功")
-                for user_id in room.member[room_id].keys():
-                    bot = session.bot
-                    await bot.send_msg(message_type="private",
-                                       user_id=int(user_id),
-                                       message=f"岛【{room_id}】修改了密码，"
-                                       f"新密码为：{format_details[0]}")
+                for user_id, member in room.member[room_id].items():
+                    if member['ready'] is True:
+                        await bot.send_msg(message_type="private",
+                                           user_id=int(user_id),
+                                           message=f"岛【{room_id}】修改了密码，"
+                                           f"新密码为：{format_details[0]}")
                 member_count = len(room.member[room_id].keys())
                 surplus = room.room[room_id]['length'] - member_count
-                bot = session.bot
                 if surplus > 0 and len(room.queue[room_id].keys()) > 0:
                     i = 0
                     for queue_id, queue in room.queue[room_id].items():
