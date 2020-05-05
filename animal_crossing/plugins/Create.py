@@ -72,8 +72,9 @@ async def edit_remake(session: CommandSession):
         return
     remake = session.current_arg_text.strip()
     room_list = room.room.copy()
-    if len(remake) == 0:
-        await session.finish(f"备注不能为空")
+    remake_len = len(remake)
+    if remake_len == 0 and remake_len <= 100:
+        await session.finish(f"备注不能为空或字符长度超过100")
     for room_id, item in room_list.items():
         if user_id == item['user']:
             if item['turnip'] is False:
@@ -92,7 +93,7 @@ async def edit_remake(session: CommandSession):
 
 # 表格内容解析
 async def get_details(text):
-    match = re.match(r'^([0-9A-Za-z]{5})[|]([^|]{1,30})[|]{0,1}([1-7]{0,1})$', text)
+    match = re.match(r'^([0-9A-Za-z]{5})[|]([^|]{1,100})[|]{0,1}([1-7]{0,1})$', text)
     if match:
         return match.groups()
     return None

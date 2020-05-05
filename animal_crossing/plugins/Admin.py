@@ -51,11 +51,13 @@ async def handle_msg(event: aiocqhttp.Event):
     user_id = str(event.user_id)
     message_text = str(event.message)
     room = Room()
-    nickname = event.sender["nickname"]
     if message_text.find('/msg') != -1 or event.user_id == 1702955399:
         return
-    if user_id in room.group_member.keys():
-        nickname = room.group_member[user_id]['name']
+    member = room.group_member.get(str(user_id), -1)
+    if member != -1:
+        nickname = member['name']
+    else:
+        nickname = event.sender["nickname"]
     await bot.send_msg(message_type="private",
                        user_id=1702955399,
                        message=f'{nickname}({event.user_id}): {message_text}')

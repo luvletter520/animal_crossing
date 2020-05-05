@@ -14,7 +14,7 @@ async def exit_room(session: CommandSession):
     room_id = room.in_member(user_id)
     queue_id = room.in_queue(user_id)
     if room_id:
-        room.exit_mem(user_id, room_id)
+        await room.exit_mem(user_id, room_id)
         await session.send('成功退出岛')
         await room.next_member(room_id)
     elif queue_id:
@@ -46,7 +46,7 @@ async def kick(session: CommandSession):
         if room_id:
             if room.room[room_id]['user'] != session.event['user_id']:
                 await session.finish("未找到对应QQ号人员")
-            room.exit_mem(user, room_id)
+            await room.exit_mem(user, room_id)
             await session.send(f'成功将{user}踢出岛')
             await session.bot.send_msg(message_type="private",
                                        user_id=int(user),

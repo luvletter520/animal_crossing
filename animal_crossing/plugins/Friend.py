@@ -22,11 +22,11 @@ async def _():
     members = {}
     for member in member_list:
         if len(member['card']) > 0:
-            members[member['user_id']] = {
+            members[str(member['user_id'])] = {
                 'name': member['card']
             }
         else:
-            members[member['user_id']] = {
+            members[str(member['user_id'])] = {
                 'name': member['nickname']
             }
     room = Room()

@@ -48,7 +48,7 @@ async def reopen(session: CommandSession):
                                 await bot.send_msg(message_type="private",
                                                    user_id=int(queue_id),
                                                    message=f"岛【{room_id}】修改了密码，可能队伍等待时间会变长，请耐心等待")
-                        room.add_member(queue_id, room_id, queue['nickname'], False)
+                        await room.add_member(queue_id, room_id, queue['nickname'], False)
                         room.exit_queue(queue_id, room_id)
                         await bot.send_msg(message_type="private",
                                            user_id=int(queue_id),

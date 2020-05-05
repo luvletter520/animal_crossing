@@ -16,14 +16,11 @@ async def ready(session: CommandSession):
         now = time.time()
         if (now - member[user]['time']) > config.QUEUE_TIME_OUT * 60 and member[user]['ready'] is False:
             await session.send('准备失败，你已超过准备时间，请重新输入 /排队 命令排队拿号')
-            room.exit_mem(user, room_id)
+            await room.exit_mem(user, room_id)
             await room.next_member(room_id)
         else:
             room_info = room.room[str(room_id)]
-            # if room.member[room_id][user]['ready'] is False:
-            #     await session.send(f'岛【{room_id}】有成员进入'
-            #                        f'QQ号：{user}'
-            #                        f'QQ昵称：{room.member[user]["nickname"]}')
+
             room.member[room_id][user]['ready'] = True
             await session.send(f'成功进入岛\n'
                                f'岛密码为：{room_info["passwd"]}\n'
@@ -49,7 +46,7 @@ async def _():
                 await bot.send_msg(message_type="private",
                                    user_id=int(member_id),
                                    message=f"你未准备, 你已超过准备时间, 请重新输入 /排队 命令排队拿号")
-                room.exit_mem(member_id, room_id)
+                await room.exit_mem(member_id, room_id)
                 await room.next_member(room_id)
             elif item['ready'] is True and (join_time - 10) >= 0 and (join_time - 10) % 5 == 0:
                 if join_time > config.VIOLATION_TIME:

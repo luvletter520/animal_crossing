@@ -12,7 +12,7 @@ async def close(session: CommandSession):
     arg = session.current_arg_text.strip()
     room_id = None
     if arg.isdigit() and user_id in config.SUPERUSERS and arg in room.room.keys():
-        room_id = int(arg)
+        room_id = arg
     else:
         for key, item in room.room.items():
             if user_id == item['user']:

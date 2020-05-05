@@ -1,6 +1,5 @@
 from nonebot import on_command, CommandSession
 from .Object import Room
-import config
 
 
 @on_command('join', aliases=('进房', '排队', '参加'), only_to_me=True)
@@ -14,13 +13,16 @@ async def join(session: CommandSession):
     queue_id = room.in_queue(user_id)
     if details not in room.room.keys():
         await session.send('该岛不存在')
-    elif user_id in room.member[details].keys() and room.member[details][user_id]['ready'] is True:
-        await session.send('你已在岛中，岛密码为：' + room.room[details]["passwd"])
+    elif user_id in room.member[details].keys():
+        if room.member[details][user_id]['ready'] is True:
+            await session.send('你已在岛中，岛密码为：' + room.room[details]["passwd"])
+        else:
+            await session.send('你尚未准备')
     elif queue_id:
         await session.send('你已在队列中，请勿重复排队或排多个队伍')
     else:
         if room.get_user_number(details) < int(room.room[details]['length']):
-            room.add_member(user_id, details, session.event["sender"]['nickname'])
+            await room.add_member(user_id, details, session.event["sender"]['nickname'])
             await session.send(f'成功进入岛\n'
                                f'岛密码为：{room.room[details]["passwd"]}\n'
                                f'请在出岛后使用 /退出 命令退出该岛\n'

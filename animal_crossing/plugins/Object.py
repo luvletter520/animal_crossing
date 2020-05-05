@@ -49,9 +49,14 @@ class Room:
                 del self.queue[room_id]
 
     async def check_group_member(self, user_id):
-        if str(user_id) in list(self.group_member.keys()):
-            return True
-        return None
+        try:
+            if user_id in config.SUPERUSERS:
+                return user_id
+            bot = get_bot()
+            member = await bot.get_group_member_info(group_id=config.GROUP_ID, user_id=user_id)
+            return member
+        except Exception as e:
+            return None
 
     def read(self, var):
         if var == "room":
@@ -115,8 +120,9 @@ class Room:
             self.room[str(room_id)]["turnip"] = True
         self.room[str(room_id)]["group"] = group_id
         self.room[str(room_id)]["user"] = user_id
-        if user_id in self.group_member.keys():
-            nickname = self.group_member[user_id]['name']
+        member = self.group_member.get(str(user_id), -1)
+        if member != -1:
+            nickname = member['name']
         self.room[str(room_id)]["nickname"] = nickname
         self.room[str(room_id)]["length"] = int(length)
         self.room[str(room_id)]["time"] = time.time()
@@ -131,8 +137,9 @@ class Room:
     def add_queue(self, mem, room_id, nickname):
         """Add a member to the queue"""
         mem = str(mem)
-        if mem in self.group_member.keys():
-            nickname = self.group_member[mem]['name']
+        member = self.group_member.get(mem, -1)
+        if member != -1:
+            nickname = member['name']
         self.queue[str(room_id)][mem] = {'time': time.time(), 'nickname': nickname}
 
     def get_wait_len(self, mem):
@@ -156,17 +163,32 @@ class Room:
         del self.member[str(room_id)]
         del self.queue[str(room_id)]
 
-    def add_member(self, mem, room_id, nickname, ready=True):
+    async def add_member(self, mem, room_id, nickname, ready=True):
         mem = str(mem)
-        if mem in self.group_member.keys():
-            nickname = self.group_member[mem]['name']
+        member = self.group_member.get(mem, -1)
+        if member != -1:
+            nickname = member['name']
         """Add a member to the target room"""
         self.member[str(room_id)][str(mem)] = {'time': time.time(), 'ready': ready, 'nickname': nickname}
+        bot = get_bot()
+        await bot.send_msg(message_type='private',
+                           user_id=self.room[str(room_id)]['user'],
+                           message=f'岛【{room_id}】有成员进入\n'
+                           f'QQ号：{mem}\n'
+                           f'昵称：{nickname}')
 
-    def exit_mem(self, mem, room_id):
+    async def exit_mem(self, mem, room_id):
         """Exit room"""
         if str(room_id) in self.member:
             if str(mem) in self.member[str(room_id)]:
+                bot = get_bot()
+                member = self.member[str(room_id)][str(mem)]
+                await bot.send_msg(message_type='private',
+                                   user_id=self.room[str(room_id)]['user'],
+                                   message=f'岛【{room_id}】有成员退出\n'
+                                   f'QQ号：{mem}\n'
+                                   f'昵称：{member["nickname"]}\n'
+                                   f'停留时间：{int((time.time() - member["time"]) / 60)}分钟')
                 del self.member[str(room_id)][str(mem)]
 
     def exit_queue(self, mem, room_id):
@@ -217,24 +239,24 @@ class Room:
         room_id = room["id"]
         if room['turnip'] is True and is_concise is False:
             return f"""岛ID：{room["id"]}
-岛主QQ号：{room['user']}
-岛主QQ昵称：{room['nickname']}
+QQ号：{room['user']}
+昵称：{room['nickname']}
 大菜头价格：{room["price"]}
 最大登岛人数为：{room["length"]}
 岛上人数：{self.get_user_number(room_id)}
 排队人数：{self.get_queue_len(room_id)}"""
         if room['turnip'] is True and is_concise is True:
             return f"""岛ID：{room["id"]}
-岛主QQ昵称：{room['nickname']}
+昵称：{room['nickname']}
 大菜头价格：{room["price"]}"""
         if room['turnip'] is False and is_concise is True:
             return f"""岛ID：{room["id"]}
-岛主QQ昵称：{room['nickname']}
+昵称：{room['nickname']}
 备注：{room["remake"]}"""
         else:
             return f"""岛ID：{room["id"]}
-岛主QQ号：{room['user']}
-岛主QQ昵称：{room['nickname']}
+QQ号：{room['user']}
+昵称：{room['nickname']}
 备注：{room["remake"]}
 最大登岛人数为：{room["length"]}
 岛上人数：{self.get_user_number(room_id)}
@@ -245,7 +267,7 @@ class Room:
         queue_ids = list(self.queue[room_id].keys())
         if len(queue_ids) > 0 and self.get_user_number(room_id) < int(self.room[room_id]['length']):
             user = queue_ids[0]
-            self.add_member(user, room_id, self.queue[room_id][user]['nickname'], False)
+            await self.add_member(user, room_id, self.queue[room_id][user]['nickname'], False)
             self.exit_queue(user, room_id)
             await bot.send_msg(message_type="private",
                                user_id=int(user),
