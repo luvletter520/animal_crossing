@@ -6,7 +6,6 @@ import json
 import aiocqhttp
 from .Object import Room
 
-
 bot = get_bot()
 
 
@@ -22,13 +21,18 @@ async def message(session: CommandSession):
 async def gag(session: CommandSession):
     user_id = session.event['user_id']
     arg = session.current_arg_text.strip()
-    match = re.match(r'^([0-9]{6,15})[|]([0-9]{1,6})$', arg)
+    match = re.match(r'^([0-9]{6,15})[|]([0-9]{1,6})[|]?([^|]*)$', arg)
     if match and user_id in config.SUPERUSERS:
         groups = match.groups()
         await session.bot.set_group_ban(group_id=config.GROUP_ID, user_id=int(groups[0]), duration=int(groups[1]) * 60)
-        await session.bot.send_msg(message_type="group",
-                                   group_id=config.GROUP_ID,
-                                   message=f'QQ号：{groups[0]} 被管理员 叮咚 禁言{groups[1]}分钟')
+        if len(groups[2]) > 0:
+            await session.bot.send_msg(message_type="group",
+                                       group_id=config.GROUP_ID,
+                                       message=f'“{groups[2]}”\nQQ号：[CQ:at,qq={groups[0]}] 被管理员 叮咚 禁言{groups[1]}分钟')
+        else:
+            await session.bot.send_msg(message_type="group",
+                                       group_id=config.GROUP_ID,
+                                       message=f'QQ号：[CQ:at,qq={groups[0]}] 被管理员 叮咚 禁言{groups[1]}分钟')
         await session.send('禁言成功！')
 
 
