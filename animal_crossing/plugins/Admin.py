@@ -24,15 +24,26 @@ async def gag(session: CommandSession):
     match = re.match(r'^([0-9]{6,15})[|]([0-9]{1,6})[|]?([^|]*)$', arg)
     if match and user_id in config.SUPERUSERS:
         groups = match.groups()
-        await session.bot.set_group_ban(group_id=config.GROUP_ID, user_id=int(groups[0]), duration=int(groups[1]) * 60)
+        gag_time = int(groups[1])
+        await session.bot.set_group_ban(group_id=config.GROUP_ID, user_id=int(groups[0]), duration=gag_time * 60)
         if len(groups[2]) > 0:
-            await session.bot.send_msg(message_type="group",
-                                       group_id=config.GROUP_ID,
-                                       message=f'“{groups[2]}”\nQQ号：[CQ:at,qq={groups[0]}] 被管理员 叮咚 禁言{groups[1]}分钟')
+            if gag_time == 0:
+                await session.bot.send_msg(message_type="group",
+                                           group_id=config.GROUP_ID,
+                                           message=f'“{groups[2]}”\nQQ号：[CQ:at,qq={groups[0]}] 被管理员 叮咚 解除禁言')
+            else:
+                await session.bot.send_msg(message_type="group",
+                                           group_id=config.GROUP_ID,
+                                           message=f'“{groups[2]}”\nQQ号：[CQ:at,qq={groups[0]}] 被管理员 叮咚 禁言{gag_time}分钟')
         else:
-            await session.bot.send_msg(message_type="group",
-                                       group_id=config.GROUP_ID,
-                                       message=f'QQ号：[CQ:at,qq={groups[0]}] 被管理员 叮咚 禁言{groups[1]}分钟')
+            if gag_time == 0:
+                await session.bot.send_msg(message_type="group",
+                                           group_id=config.GROUP_ID,
+                                           message=f'QQ号：[CQ:at,qq={groups[0]}] 被管理员 叮咚 解除禁言')
+            else:
+                await session.bot.send_msg(message_type="group",
+                                           group_id=config.GROUP_ID,
+                                           message=f'QQ号：[CQ:at,qq={groups[0]}] 被管理员 叮咚 禁言{gag_time}分钟')
         await session.send('禁言成功！')
 
 

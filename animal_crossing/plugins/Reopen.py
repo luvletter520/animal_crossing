@@ -59,7 +59,9 @@ async def reopen(session: CommandSession):
         if is_reopen is False:
             await session.send(f"你尚未开启过岛，请使用 /开岛 命令，并输入正确格式开启")
     else:
-        await session.finish('格式错误，岛密码必须为5位字母或数字，最大登岛人数为1～7人')
+        await session.finish('格式错误，岛密码必须为5位字母或数字，最大登岛人数为1～7人\n'
+                             '格式为：/重开 岛密码|最大登岛人数(可选)\n'
+                             '重开命令只能修改岛密码盒最大登岛人数，如需修改备注请使用 /备注 命令进行修改')
 
 
 @reopen.args_parser

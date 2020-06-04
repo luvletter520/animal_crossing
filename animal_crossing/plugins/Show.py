@@ -13,4 +13,5 @@ async def show(session: CommandSession):
     room_id = None
     if arg.isdigit():
         room_id = int(arg)
-    await session.send(room.to_string(config.GROUP_ID, room_id, session.event['message_type'] == 'group'))
+    text = room.to_string(config.GROUP_ID, room_id, session.event['message_type'] == 'group')
+    await session.send(f'{text}\n========================\n（现在使用 /订阅 命令，当有新房间创建时叮咚会自动私聊通知你。）')

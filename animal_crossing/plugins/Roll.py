@@ -6,6 +6,11 @@ import random
 async def message(session: CommandSession):
     user_id = session.event['user_id']
     arg = session.current_arg_text.strip()
+    strs = arg.split('|')
+    remark = None
+    if len(strs) >= 2:
+        remark = strs[1]
+        arg = strs[0]
     range_number = 6
     if arg.isdigit():
         arg = int(arg)
@@ -20,4 +25,7 @@ async def message(session: CommandSession):
     elif arg <= 100 or arg > 100:
         range_number = 100
         number = random.randint(1, 100)
-    await session.send(f'[CQ:at,qq={user_id}]\n你随机的点数为：{number}\n随机范围为：1 - {range_number}')
+    if remark:
+        await session.send(f'{remark}\n[CQ:at,qq={user_id}]\n你随机的点数为：{number}\n随机范围为：1 - {range_number}')
+    else:
+        await session.send(f'[CQ:at,qq={user_id}]\n你随机的点数为：{number}\n随机范围为：1 - {range_number}')

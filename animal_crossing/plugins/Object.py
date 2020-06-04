@@ -25,12 +25,14 @@ class Room:
         self.ban = {}
         self.count = {}
         self.group_member = {}
+        self.subscribe = []
         self.read("room")
         self.read("count")
         self.read("member")
         self.read("queue")
         self.read("ban")
         self.read("group_member")
+        self.read("subscribe")
 
     def clear_all(self):
         self.room = {}
@@ -38,15 +40,6 @@ class Room:
         self.queue = {}
         self.count = {"count": 0}
         self.save()
-
-    def clear_turnip_room(self):
-        room_list = self.room.copy()
-        for key, room in room_list.items():
-            if room['turnip'] is True:
-                room_id = str(key)
-                del self.room[room_id]
-                del self.member[room_id]
-                del self.queue[room_id]
 
     async def check_group_member(self, user_id):
         try:
@@ -71,6 +64,8 @@ class Room:
             self.queue = common.read_json("animal_crossing/data/queue.json", {})
         elif var == "group_member":
             self.group_member = common.read_json("animal_crossing/data/group_member.json", {})
+        elif var == "subscribe":
+            self.subscribe = common.read_json("animal_crossing/data/subscribe.json", [])
 
     def write(self, var):
         if var == "room":
@@ -91,6 +86,9 @@ class Room:
         elif var == "group_member":
             fo = open("animal_crossing/data/group_member.json", "w")
             j = json.dumps(self.group_member)
+        elif var == "subscribe":
+            fo = open("animal_crossing/data/subscribe.json", "w")
+            j = json.dumps(self.subscribe)
         else:
             return
         fo.write(j)
@@ -102,6 +100,7 @@ class Room:
         self.write("room")
         self.write("count")
         self.write("ban")
+        self.write("subscribe")
 
     def open(self, passwd, remake, price, group_id, user_id, nickname, length=config.DEFAULT_CAPACITY):
         self.count["count"] = self.count["count"] + 1
@@ -215,6 +214,20 @@ class Room:
             return 0
         return len(self.member[str(id)])
 
+    def add_subscribe(self, user_id):
+        if user_id in self.subscribe:
+            return False
+        else:
+            self.subscribe.append(user_id)
+            return True
+
+    def del_subscribe(self, user_id):
+        if user_id in self.subscribe:
+            self.subscribe.remove(user_id)
+            return True
+        else:
+            return False
+
     def to_string(self, group_id, room_id=None, is_concise=False):
         output = ''
         group_room = []
@@ -237,19 +250,7 @@ class Room:
 
     def room_to_string(self, room, is_concise):
         room_id = room["id"]
-        if room['turnip'] is True and is_concise is False:
-            return f"""岛ID：{room["id"]}
-QQ号：{room['user']}
-昵称：{room['nickname']}
-大菜头价格：{room["price"]}
-最大登岛人数为：{room["length"]}
-岛上人数：{self.get_user_number(room_id)}
-排队人数：{self.get_queue_len(room_id)}"""
-        if room['turnip'] is True and is_concise is True:
-            return f"""岛ID：{room["id"]}
-昵称：{room['nickname']}
-大菜头价格：{room["price"]}"""
-        if room['turnip'] is False and is_concise is True:
+        if is_concise is True:
             return f"""岛ID：{room["id"]}
 昵称：{room['nickname']}
 备注：{room["remake"]}"""
